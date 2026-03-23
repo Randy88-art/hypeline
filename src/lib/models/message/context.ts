@@ -85,6 +85,7 @@ export interface RoleStatusContext {
 	role: string;
 	added: boolean;
 	viewer: Viewer;
+	moderator: Viewer;
 }
 
 export interface StreamStatusContext {

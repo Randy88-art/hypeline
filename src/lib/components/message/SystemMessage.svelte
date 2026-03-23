@@ -167,7 +167,7 @@
 {/snippet}
 
 {#snippet roleStatus(ctx: RoleStatusContext)}
-	{@html colorizeName(message.channel.user)}
+	{@html colorizeName(ctx.moderator)}
 	{ctx.added ? "added" : "removed"}
 	{@html colorizeName(ctx.viewer)} as a {ctx.role}.
 {/snippet}

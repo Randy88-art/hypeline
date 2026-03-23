@@ -195,6 +195,7 @@ export default defineHandler({
 					role: "moderator",
 					added,
 					viewer,
+					moderator,
 				};
 
 				break;
@@ -210,6 +211,7 @@ export default defineHandler({
 					role: "VIP",
 					added,
 					viewer,
+					moderator,
 				};
 
 				break;
