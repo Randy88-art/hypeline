@@ -16,7 +16,7 @@
 		app.channels
 			.values()
 			.toArray()
-			.sort((a, b) => {
+			.toSorted((a, b) => {
 				if (a.stream && b.stream) {
 					return b.stream.viewers - a.stream.viewers;
 				}
@@ -31,7 +31,7 @@
 	const groups = $derived.by(() => {
 		const pinnedChannels = sorted
 			.filter((c) => c.pinned)
-			.sort((a, b) => {
+			.toSorted((a, b) => {
 				const indexA = storage.state.pinned.indexOf(a.id);
 				const indexB = storage.state.pinned.indexOf(b.id);
 
@@ -80,7 +80,7 @@
 	{#if sidebar.collapsed}
 		<Separator />
 	{:else}
-		<span class="text-muted-foreground mt-2 inline-block px-2 text-xs font-semibold uppercase">
+		<span class="mt-2 inline-block px-2 text-xs font-semibold text-muted-foreground uppercase">
 			{group.type}
 		</span>
 	{/if}

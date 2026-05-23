@@ -11,12 +11,12 @@ import type {
 } from "$lib/twitch/irc";
 import { extractEmotes } from "$lib/util";
 import { Badge } from "../badge";
+import type { Channel } from "../channel.svelte";
 import { User } from "../user.svelte";
 import { Viewer } from "../viewer.svelte";
-import type { Channel } from "../channel.svelte";
 import { parse } from "./parse";
-import { TextualMessage } from "./textual-message.svelte";
 import type { Node } from "./parse";
+import { TextualMessage } from "./textual-message.svelte";
 
 function createPartialUser(channel: Channel, sender: BasicUser, color: string) {
 	const user = new User(channel.client, {
@@ -199,7 +199,7 @@ export class UserMessage extends TextualMessage {
 	// attached later.
 	public get nodes() {
 		if (!this.#nodes.length) {
-			this.#nodes = parse(this).sort((a, b) => a.start - b.start);
+			this.#nodes = parse(this).toSorted((a, b) => a.start - b.start);
 		}
 
 		return this.#nodes;
@@ -284,7 +284,7 @@ export class UserMessage extends TextualMessage {
 
 					return true;
 				})
-				.sort((a, b) => b.setId.localeCompare(a.setId));
+				.toSorted((a, b) => b.setId.localeCompare(a.setId));
 
 			this.badges.push(...external);
 		}

@@ -21,8 +21,8 @@
 
 		if (format === "auto") {
 			const locale = new Intl.Locale(navigator.language);
-			// @ts-expect-error - limited support
-			const cycles: string[] = locale.getHourCycles?.() ?? [];
+			const cycles = locale.getHourCycles();
+
 			format = cycles.includes("h12") ? "12" : "24";
 		}
 
@@ -33,7 +33,7 @@
 </script>
 
 {#if settings.state["chat.messages.timestamps.show"]}
-	<time class="text-muted-foreground text-xs tabular-nums" datetime={date.toISOString()}>
+	<time class="text-xs text-muted-foreground tabular-nums" datetime={date.toISOString()}>
 		{formatted}
 	</time>
 {/if}
