@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { useDraggable } from "@dnd-kit-svelte/svelte";
+	import { createDraggable } from "@dnd-kit/svelte";
 	import type { Channel } from "$lib/models/channel.svelte";
 	import ChannelListItem from "./ChannelListItem.svelte";
 
@@ -9,10 +9,17 @@
 
 	const { channel }: Props = $props();
 
-	const { ref, isDragging } = useDraggable({
-		id: () => `${channel.id}:channel-list`,
-		type: "channel-list-item",
+	const draggable = createDraggable({
+		get id() {
+			return `channel:${channel.id}`;
+		},
+		get type() {
+			return "channel";
+		},
+		get data() {
+			return { kind: "channel", id: channel.id };
+		},
 	});
 </script>
 
-<ChannelListItem {channel} dragging={isDragging.current} {ref} />
+<ChannelListItem {channel} dragging={draggable.isDragging} attach={draggable.attach} />

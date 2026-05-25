@@ -1,14 +1,7 @@
 <script lang="ts">
-	import { DragDropProvider, DragOverlay } from "@dnd-kit-svelte/svelte";
-	import {
-		Accessibility,
-		Cursor,
-		Feedback,
-		PreventSelection,
-		Scroller,
-		ScrollListener,
-	} from "@dnd-kit/dom";
+	import { AutoScroller } from "@dnd-kit/dom";
 	import { move } from "@dnd-kit/helpers";
+	import { DragDropProvider, DragOverlay } from "@dnd-kit/svelte";
 	import { ask } from "@tauri-apps/plugin-dialog";
 	import { relaunch } from "@tauri-apps/plugin-process";
 	import { check } from "@tauri-apps/plugin-updater";
@@ -17,6 +10,7 @@
 	import { resolve } from "$app/paths";
 	import { app } from "$lib/app.svelte";
 	import Sidebar from "$lib/components/Sidebar.svelte";
+	import StreamInfo from "$lib/components/StreamInfo.svelte";
 	import * as Tooltip from "$lib/components/ui/tooltip";
 	import { storage } from "$lib/stores";
 
@@ -56,24 +50,27 @@
 />
 
 <DragDropProvider
-	plugins={[
-		// It doesn't seem like there's currently a way to disable the
-		// AutoScroller plugin other than not including it.
-		// https://github.com/clauderic/dnd-kit/issues/1790
-		Accessibility,
-		Cursor,
-		Feedback,
-		PreventSelection,
-		Scroller,
-		ScrollListener,
+	plugins={(defaults) => [
+		...defaults,
+		AutoScroller.configure({
+			threshold: { x: 0, y: 0 },
+		}),
 	]}
 	onDragOver={(event) => {
-		if (event.operation.target?.id === "pinned-channels") {
+		const source = event.operation.source;
+		const target = event.operation.target;
+		if (!source || !target) return;
+
+		if (source.type === "pinned" && target.type === "pinned") {
 			storage.state.pinned = move(storage.state.pinned, event);
 		}
 	}}
 	onDragEnd={(event) => {
-		app.splits.handleDragEnd(event);
+		const target = event.operation.target;
+
+		if (target?.type === "split-zone") {
+			app.splits.handleDragEnd(event);
+		}
 	}}
 >
 	<Tooltip.Provider delayDuration={100}>
@@ -90,20 +87,33 @@
 
 	<DragOverlay>
 		{#snippet children(source)}
-			{@const [id] = source.id.toString().split(":")}
-			{@const channel = app.channels.get(id)}
+			{@const channel = app.channels.get(source.data.id)}
+			{@const isPane = source.type === "pane"}
 
-			<div class="flex w-44 items-center justify-center gap-x-1 rounded-md bg-muted/90 py-2">
-				{#if channel}
-					<img
-						src={channel.user.avatarUrl}
-						alt={channel.user.username}
-						class="size-5 rounded-full object-cover"
-					/>
+			{#if channel}
+				{#if isPane}
+					<div
+						class="mx-auto flex max-w-max items-center gap-2 rounded bg-background px-2 py-1"
+					>
+						<img
+							class={[
+								"size-6 rounded-full object-cover",
+								!channel.stream && "grayscale",
+							]}
+							src={channel.user.avatarUrl}
+							alt={channel.user.displayName}
+							width="150"
+							height="150"
+						/>
+
+						<span class="text-sm font-medium">{channel.user.displayName}</span>
+					</div>
+				{:else}
+					<div class="flex items-center gap-2">
+						<StreamInfo {channel} />
+					</div>
 				{/if}
-
-				<span class="text-sm font-medium">{channel?.user.displayName ?? "Empty"}</span>
-			</div>
+			{/if}
 		{/snippet}
 	</DragOverlay>
 </DragDropProvider>

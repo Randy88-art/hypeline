@@ -5,29 +5,31 @@
 	import { app } from "$lib/app.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { settings } from "$lib/settings";
-	import { SplitLayout } from "$lib/split-layout";
+	import { emptyPaneId, isEmptyPaneId } from "$lib/split-layout";
+	import DotsSix from "~icons/ph/dots-six";
 	import SquareHalfBottom from "~icons/ph/square-half-bottom-fill";
 	import SquareHalf from "~icons/ph/square-half-fill";
 	import X from "~icons/ph/x";
+	import GuestList from "../GuestList.svelte";
 
 	interface Props {
 		id: string;
-		handleRef?: Attachment;
+		attachHandle?: Attachment<HTMLElement>;
 	}
 
-	const { id, handleRef }: Props = $props();
+	const { id, attachHandle }: Props = $props();
 
 	const channel = $derived(app.channels.get(id));
 
 	async function closeSplit(event: MouseEvent) {
 		const preserve =
 			settings.state["splits.closeBehavior"] === "preserve" &&
-			!id.startsWith("split-") &&
+			!isEmptyPaneId(id) &&
 			!event.shiftKey;
 
-		if (app.splits.root === id || id === SplitLayout.EMPTY_ROOT_ID) {
+		if (app.splits.root === id) {
 			if (preserve) {
-				app.splits.remove(id);
+				app.splits.replace(id, emptyPaneId());
 
 				if (settings.state["splits.leaveOnClose"]) {
 					await channel?.leave();
@@ -51,7 +53,7 @@
 		}
 
 		if (preserve) {
-			app.splits.replace(id, `split-${crypto.randomUUID()}`);
+			app.splits.replace(id, emptyPaneId());
 		} else {
 			app.splits.remove(id);
 		}
@@ -63,10 +65,7 @@
 </script>
 
 <div class="flex items-center justify-between border-b bg-sidebar p-1" data-slot="split-header">
-	<div
-		class="flex h-full flex-1 cursor-grab items-center gap-x-2 overflow-hidden px-1 active:cursor-grabbing"
-		{@attach handleRef}
-	>
+	<div class="flex h-full shrink-0 items-center gap-x-2 overflow-hidden px-1">
 		{#if channel}
 			<img
 				class="size-5 rounded-full"
@@ -78,7 +77,15 @@
 			/>
 
 			<span class="truncate text-sm font-medium select-none">{channel.user.displayName}</span>
+
+			{#if channel.stream?.guests.size}
+				<GuestList {channel} />
+			{/if}
 		{/if}
+	</div>
+
+	<div class="cursor-grab active:cursor-grabbing" {@attach attachHandle}>
+		<DotsSix />
 	</div>
 
 	<div class="flex shrink-0 items-center gap-x-1 text-muted-foreground">

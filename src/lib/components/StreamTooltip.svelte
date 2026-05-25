@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
-	import { getSidebarContext } from "$lib/context";
+	import { app } from "$lib/app.svelte";
 	import { createChannelMenu } from "$lib/menus/channel-menu";
 	import type { Channel } from "$lib/models/channel.svelte";
 	import { openMenu } from "$lib/util";
@@ -14,8 +15,6 @@
 	}
 
 	const { channel }: Props = $props();
-
-	const sidebar = getSidebarContext();
 </script>
 
 <Tooltip.Root>
@@ -23,35 +22,31 @@
 		{#snippet child({ props })}
 			<div
 				{...props}
-				class="relative flex items-center gap-2 rounded-lg p-1.5 transition-colors hover:bg-accent"
+				class="relative flex cursor-pointer items-center gap-2 rounded-lg p-1.5 transition-colors hover:bg-accent"
+				onclick={async () => {
+					await goto(
+						resolve("/(main)/channels/[username]", {
+							username: channel.user.username,
+						}),
+					);
+				}}
 				oncontextmenu={(event) => openMenu(event, () => createChannelMenu(channel))}
 			>
-				<a
-					class="absolute inset-0 z-10"
-					href={resolve("/(main)/channels/[username]", {
-						username: channel.user.username,
-					})}
-					draggable="false"
-					aria-label="Join {channel.user.displayName}"
-					data-sveltekit-preload-data="off"
-				>
-				</a>
-
 				<StreamInfo {channel} />
 			</div>
 		{/snippet}
 	</Tooltip.Trigger>
 
 	<Tooltip.Content
-		class={["max-w-64", !sidebar.collapsed && !channel.stream && "hidden"]}
+		class={["max-w-64", !app.sidebarCollapsed && !channel.stream && "hidden"]}
 		side="right"
 		sideOffset={8}
 	>
 		{#if channel.stream}
 			<div class="space-y-0.5">
-				{#if sidebar.collapsed}
+				{#if app.sidebarCollapsed}
 					<div
-						class="overflow-hidden overflow-ellipsis whitespace-nowrap text-twitch-link dark:text-twitch"
+						class="overflow-hidden text-ellipsis whitespace-nowrap text-twitch-link dark:text-twitch"
 					>
 						{channel.user.displayName} &bullet; {channel.stream.game}
 					</div>
@@ -59,7 +54,7 @@
 
 				<p class="line-clamp-2">{channel.stream.title}</p>
 
-				{#if sidebar.collapsed}
+				{#if app.sidebarCollapsed}
 					<div class="flex items-center text-red-400 dark:text-red-500">
 						<Users class="mr-1 size-3" />
 
@@ -73,7 +68,7 @@
 					<GuestList {channel} tooltip />
 				{/if}
 			</div>
-		{:else if sidebar.collapsed}
+		{:else if app.sidebarCollapsed}
 			{channel.user.displayName}
 		{/if}
 	</Tooltip.Content>
