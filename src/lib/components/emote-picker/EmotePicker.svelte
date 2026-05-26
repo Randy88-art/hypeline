@@ -2,13 +2,15 @@
 	import { Accordion, Popover } from "bits-ui";
 	import { onDestroy, tick } from "svelte";
 	import { app } from "$lib/app.svelte";
-	import type { Emote, EmoteSet } from "$lib/emotes";
+	import type { EmoteSet } from "$lib/emotes";
 	import type { Channel } from "$lib/models/channel.svelte";
 	import CaretRight from "~icons/ph/caret-right";
 	import Smiley from "~icons/ph/smiley";
 	import SmileySad from "~icons/ph/smiley-sad";
-	import { Input } from "./ui/input";
-	import * as InputGroup from "./ui/input-group";
+	import EmoteGrid from "./EmoteGrid.svelte";
+	import ProviderRail from "./ProviderRail.svelte";
+	import { Input } from "../ui/input";
+	import * as InputGroup from "../ui/input-group";
 
 	interface Props {
 		channel: Channel;
@@ -116,17 +118,6 @@
 
 		document.getElementById(id)?.scrollIntoView();
 	}
-
-	function toImageSet(srcset: string[]) {
-		const candidates: string[] = [];
-
-		for (const src of srcset) {
-			const [url, density] = src.split(" ");
-			candidates.push(`url("${url}") ${density}`);
-		}
-
-		return `image-set(${candidates.join(", ")})`;
-	}
 </script>
 
 <Popover.Root>
@@ -145,22 +136,7 @@
 			sideOffset={12}
 			collisionPadding={8}
 		>
-			<div class="flex flex-col gap-3 overflow-y-auto p-2">
-				{#each sorted as set (set.id)}
-					<button class="group" type="button" onclick={() => scrollToSet(set.id)}>
-						<img
-							class={[
-								"size-7 rounded-full object-contain",
-								activeSet === set.id && "outline-1 outline-primary",
-							]}
-							src={set.owner.avatarUrl}
-							alt={set.owner.displayName}
-							decoding="async"
-							loading="lazy"
-						/>
-					</button>
-				{/each}
-			</div>
+			<ProviderRail sets={sorted} activeId={activeSet} onselect={scrollToSet} />
 
 			<div class="flex w-md flex-col border-l">
 				<Input
@@ -173,7 +149,7 @@
 				{#if query}
 					{#if results.length}
 						<div class="grid grid-cols-9 content-start gap-1.5 overflow-y-auto p-2">
-							{@render emoteGrid(results)}
+							<EmoteGrid emotes={results} onpick={appendEmote} />
 						</div>
 					{:else}
 						<div
@@ -220,7 +196,7 @@
 
 								{#if open.includes(set.id)}
 									<Accordion.Content class="grid grid-cols-9 gap-1.5 px-2 pb-2">
-										{@render emoteGrid(set.emotes)}
+										<EmoteGrid emotes={set.emotes} onpick={appendEmote} />
 									</Accordion.Content>
 								{/if}
 							</Accordion.Item>
@@ -231,19 +207,3 @@
 		</Popover.Content>
 	</Popover.Portal>
 </Popover.Root>
-
-{#snippet emoteGrid(emotes: Emote[])}
-	{#each emotes as emote (`${emote.name}:${emote.id}`)}
-		<button
-			class="w-full"
-			title={emote.name}
-			type="button"
-			onclick={() => appendEmote(emote.name)}
-		>
-			<div
-				class="aspect-square w-full bg-contain bg-center bg-no-repeat"
-				style:background-image={toImageSet(emote.srcset)}
-			></div>
-		</button>
-	{/each}
-{/snippet}
