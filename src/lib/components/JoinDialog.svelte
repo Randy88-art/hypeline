@@ -55,7 +55,7 @@
 	}
 
 	async function join() {
-		if (!value.trim()) return;
+		if (loading || !value.trim()) return;
 		value = value.toLowerCase();
 
 		try {
@@ -120,6 +120,7 @@
 				type="single"
 				loop
 				onValueChange={async (v) => {
+					if (loading) return;
 					value = v;
 					await tick();
 					await join();
