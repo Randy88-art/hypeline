@@ -28,11 +28,6 @@
 	const showSuggestions = $derived(!!completer?.suggestions.length && completer.prefixed);
 
 	$effect(() => {
-		chat.input = input;
-		completer = new Completer(chat);
-	});
-
-	$effect(() => {
 		void error;
 
 		const timeout = setTimeout(() => {
@@ -147,7 +142,14 @@
 			onmousedown={() => completer?.reset()}
 			{...rest}
 			bind:value={chat.value}
-			bind:ref={input}
+			bind:ref={
+				() => input,
+				(el) => {
+					input = el;
+					chat.input = el;
+					completer = el ? new Completer(chat, el) : undefined;
+				}
+			}
 		/>
 
 		<InputGroup.Addon align="inline-end">

@@ -25,12 +25,11 @@ export class Completer {
 	public current = $state(0);
 	public suggestions = $state<Suggestion[]>([]);
 
-	public constructor(private readonly chat: Chat) {
-		if (!chat.input) {
-			throw new Error("Chat input element is not set.");
-		}
-
-		this.#input = chat.input;
+	public constructor(
+		private readonly chat: Chat,
+		input: HTMLInputElement,
+	) {
+		this.#input = input;
 
 		this.#commandOptions = {
 			source: () => commands,
