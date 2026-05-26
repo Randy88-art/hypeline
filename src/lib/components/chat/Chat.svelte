@@ -131,13 +131,13 @@
 				{/if}
 
 				{@const next = chat.messages.at(i + 1)}
+				{@const nextRecent = next && (next.isSystem() || next.isUser()) && next.recent}
 
 				{#if message === lastRead && next && settings.state["chat.newSeparator"]}
 					<Separator class="text-red-400">New messages</Separator>
 				{/if}
 
-				{/* @ts-ignore */ null}
-				{#if message.recent && !next?.recent && settings.state["chat.messages.history.separator"]}
+				{#if message.recent && !nextRecent && settings.state["chat.messages.history.separator"]}
 					<Separator class="text-red-400">Live messages</Separator>
 				{/if}
 			{:else if message.isComponent()}
