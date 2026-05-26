@@ -2,7 +2,7 @@
 	import { Accordion, Popover } from "bits-ui";
 	import { onDestroy, tick } from "svelte";
 	import { app } from "$lib/app.svelte";
-	import type { Emote, EmoteProvider, EmoteSet } from "$lib/emotes";
+	import type { Emote, EmoteSet } from "$lib/emotes";
 	import type { Channel } from "$lib/models/channel.svelte";
 	import CaretRight from "~icons/ph/caret-right";
 	import Smiley from "~icons/ph/smiley";
@@ -18,19 +18,59 @@
 
 	let query = $state("");
 	let activeSet = $state("");
-	let sorted = $state.raw<EmoteSet[]>([]);
+
+	const sorted = $derived.by<EmoteSet[]>(() => {
+		const sets = new Map<string, EmoteSet>();
+
+		for (const set of app.emoteSets.values()) {
+			if (set.global) sets.set(set.id, set);
+		}
+
+		app.user?.emoteSets.forEach((set) => sets.set(set.id, set));
+
+		for (const provider of ["7TV", "BetterTTV", "FrankerFaceZ"] as const) {
+			const emotes = channel.emotes
+				.values()
+				.filter((emote) => emote.provider === provider)
+				.toArray();
+
+			if (!emotes.length) continue;
+
+			const id = `${provider}:${channel.id}`;
+
+			sets.set(id, {
+				id,
+				name: `${channel.user.displayName}: ${provider}`,
+				owner: channel.user,
+				global: false,
+				emotes,
+			});
+		}
+
+		return sets
+			.values()
+			.toArray()
+			.toSorted((a, b) => {
+				// Priority: channel specific > channel owned > global
+				const pA = a.owner.id === channel.id ? 0 : a.global ? 2 : 1;
+				const pB = b.owner.id === channel.id ? 0 : b.global ? 2 : 1;
+
+				return pA !== pB ? pA - pB : a.name.localeCompare(b.name);
+			});
+	});
 
 	let open = $derived(sorted.filter((set) => set.owner.id === channel.id).map((set) => set.id));
 
 	const results = $derived.by(() => {
 		if (!query) return [];
 
+		const needle = query.toLowerCase();
+
 		return sorted
 			.flatMap((set) => set.emotes)
-			.filter((emote) => emote.name.toLowerCase().includes(query.toLowerCase()));
+			.filter((emote) => emote.name.toLowerCase().includes(needle));
 	});
 
-	const emoteSets = new Map<string, EmoteSet>();
 	const visibleSets = new Set<string>();
 
 	const observer = new IntersectionObserver((entries) => {
@@ -52,53 +92,10 @@
 
 	onDestroy(() => observer.disconnect());
 
-	$effect(() => {
-		app.emoteSets
-			.values()
-			.filter((set) => set.global)
-			.forEach((set) => emoteSets.set(set.id, set));
-
-		app.user?.emoteSets.forEach((set) => emoteSets.set(set.id, set));
-
-		addProvider("7TV");
-		addProvider("BetterTTV");
-		addProvider("FrankerFaceZ");
-
-		sorted = emoteSets
-			.values()
-			.toArray()
-			.toSorted((a, b) => {
-				// Priority: channel specific > channel owned > global
-				const pA = a.owner.id === channel.id ? 0 : a.global ? 2 : 1;
-				const pB = b.owner.id === channel.id ? 0 : b.global ? 2 : 1;
-
-				return pA !== pB ? pA - pB : a.name.localeCompare(b.name);
-			});
-
-		return () => emoteSets.clear();
-	});
-
 	function observe(element: HTMLElement) {
 		observer.observe(element);
 
 		return () => observer.unobserve(element);
-	}
-
-	function addProvider(provider: EmoteProvider) {
-		const emotes = channel.emotes
-			.values()
-			.filter((emote) => emote.provider === provider)
-			.toArray();
-
-		if (!emotes.length) return;
-
-		emoteSets.set(`${provider}:${channel.id}`, {
-			id: `${provider}:${channel.id}`,
-			name: `${channel.user.displayName}: ${provider}`,
-			owner: channel.user,
-			global: false,
-			emotes,
-		});
 	}
 
 	function appendEmote(name: string) {
