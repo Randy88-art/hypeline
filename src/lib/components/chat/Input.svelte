@@ -4,12 +4,11 @@
 	import { Completer } from "$lib/completer.svelte";
 	import { CommandError } from "$lib/errors/command-error";
 	import type { Chat } from "$lib/models/chat.svelte";
-	import Warning from "~icons/ph/warning";
-	import XCircle from "~icons/ph/x-circle";
-	import EmotePicker from "../EmotePicker.svelte";
-	import Message from "../message/Message.svelte";
+	import EmotePicker from "../emote-picker/EmotePicker.svelte";
 	import Suggestions from "../Suggestions.svelte";
 	import * as InputGroup from "../ui/input-group";
+	import ErrorBanner from "./ErrorBanner.svelte";
+	import ReplyBanner from "./ReplyBanner.svelte";
 	import Restrictions from "./Restrictions.svelte";
 
 	interface Props extends HTMLInputAttributes {
@@ -128,37 +127,9 @@
 />
 
 {#if chat.replyTarget}
-	<div
-		class="rounded-t-md border border-b-0 border-muted bg-muted/50 px-3 pt-1.5 pb-2.5 text-sm transition-colors duration-200 has-[+div>input:focus-visible]:border-input"
-	>
-		<div class="flex items-center justify-between">
-			<span class="text-muted-foreground">Replying to:</span>
-
-			<button
-				type="button"
-				aria-label="Cancel reply"
-				onclick={() => (chat.replyTarget = null)}
-			>
-				<XCircle
-					class="block text-muted-foreground transition-colors duration-150 hover:text-foreground"
-				/>
-			</button>
-		</div>
-
-		<div class="mt-2">
-			<Message message={chat.replyTarget} />
-		</div>
-	</div>
+	<ReplyBanner target={chat.replyTarget} oncancel={() => (chat.replyTarget = null)} />
 {:else if error}
-	<div
-		class="rounded-t-md border border-b-0 border-muted bg-muted/50 px-3 py-2.5 text-sm transition-colors duration-200 has-[+div>input:focus-visible]:border-input"
-	>
-		<div class="flex gap-1">
-			<Warning class="mt-px shrink-0 text-yellow-400" />
-
-			<p class="text-muted-foreground">{error}</p>
-		</div>
-	</div>
+	<ErrorBanner message={error} />
 {/if}
 
 <div class="flex flex-col gap-1.5">
