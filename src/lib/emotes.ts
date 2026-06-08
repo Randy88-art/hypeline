@@ -1,3 +1,6 @@
+import stv from "../assets/logos/7tv.svg";
+import bttv from "../assets/logos/bttv.svg";
+import ffz from "../assets/logos/ffz.svg";
 import type { Emote as SevenTvEmote } from "./graphql/7tv";
 import type { User } from "./models/user.svelte";
 
@@ -49,6 +52,11 @@ export interface EmoteSet {
 	readonly id: string;
 
 	/**
+	 * The provider the set's emotes belong to.
+	 */
+	readonly provider: EmoteProvider;
+
+	/**
 	 * The name of the emote set.
 	 */
 	readonly name: string;
@@ -67,6 +75,78 @@ export interface EmoteSet {
 	 * Whether the emote set can be used in any channel.
 	 */
 	readonly global?: boolean;
+}
+
+export const GLOBAL_PROVIDERS = {
+	FrankerFaceZ: {
+		name: "Global: FrankerFaceZ",
+		owner: {
+			id: "ffz_global",
+			displayName: "FrankerFaceZ Global",
+			avatarUrl: ffz,
+		},
+	},
+	BetterTTV: {
+		name: "Global: BetterTTV",
+		owner: {
+			id: "bttv_global",
+			displayName: "BetterTTV Global",
+			avatarUrl: bttv,
+		},
+	},
+	"7TV": {
+		name: "Global: 7TV",
+		owner: {
+			id: "7tv_global",
+			displayName: "7TV Global",
+			avatarUrl: stv,
+		},
+	},
+};
+
+export const PROVIDER_DISPLAY_ORDER: readonly EmoteProvider[] = [
+	"7TV",
+	"BetterTTV",
+	"FrankerFaceZ",
+];
+
+function groupByProvider(emotes: Iterable<Emote>): Map<EmoteProvider, Emote[]> {
+	const groups = new Map<EmoteProvider, Emote[]>();
+
+	for (const emote of emotes) {
+		const group = groups.get(emote.provider);
+
+		if (group) {
+			group.push(emote);
+		} else {
+			groups.set(emote.provider, [emote]);
+		}
+	}
+
+	return groups;
+}
+
+export function toProviderSets(
+	emotes: Iterable<Emote>,
+	meta: (
+		provider: EmoteProvider,
+		emotes: Emote[],
+	) => Omit<EmoteSet, "provider" | "emotes"> | null,
+): EmoteSet[] {
+	const groups = groupByProvider(emotes);
+	const sets: EmoteSet[] = [];
+
+	for (const provider of PROVIDER_DISPLAY_ORDER) {
+		const group = groups.get(provider);
+		if (!group?.length) continue;
+
+		const info = meta(provider, group);
+		if (!info) continue;
+
+		sets.push({ ...info, provider, emotes: group });
+	}
+
+	return sets;
 }
 
 export interface FfzEmote {
@@ -115,36 +195,23 @@ export function transformBttvEmote(emote: BttvEmote): Emote {
 }
 
 export function transform7tvEmote(emote: SevenTvEmote, alias?: string): Emote {
-	let width = 28;
-	let height = 28;
-	const srcset: string[] = [];
+	const animated = emote.images.filter((img) => !img.url.includes("static"));
 
-	for (const format of ["webp", "gif", "png"]) {
-		const images = emote.images.filter(
-			(img) => !img.url.includes("static") && img.mime.endsWith(format),
-		);
+	const format = ["webp", "gif", "png"].find((f) => animated.some((img) => img.mime.endsWith(f)));
 
-		if (images.length) {
-			images.sort((a, b) => b.width - a.width);
+	const images = animated
+		.filter((img) => img.mime.endsWith(format ?? ""))
+		.toSorted((a, b) => b.width - a.width);
 
-			for (const img of images) {
-				width = img.width;
-				height = img.height;
-
-				srcset.push(`${img.url} ${img.scale}x`);
-			}
-
-			break;
-		}
-	}
+	const largest = images.at(0);
 
 	return {
 		provider: "7TV",
 		id: emote.id,
 		name: alias ?? emote.defaultName,
-		width,
-		height,
-		srcset,
+		width: largest?.width ?? 28,
+		height: largest?.height ?? 28,
+		srcset: images.map((img) => `${img.url} ${img.scale}x`),
 		zeroWidth: emote.flags.defaultZeroWidth,
 	};
 }
