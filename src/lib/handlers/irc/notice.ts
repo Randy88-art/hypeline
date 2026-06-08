@@ -6,11 +6,7 @@ export default defineHandler({
 	name: "notice",
 	async handle(data) {
 		const channel = app.channels.getByLogin(data.channel_login);
-		if (!channel) return;
-
-		if (!data.is_recent && app.user?.moderating.has(channel.id)) {
-			return;
-		}
+		if (!channel || (!data.is_recent && channel.isMod)) return;
 
 		const meta = {
 			deleted: data.deleted,

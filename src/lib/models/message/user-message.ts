@@ -187,7 +187,7 @@ export class UserMessage extends TextualMessage {
 		const diff = Math.abs(now - this.timestamp.getTime());
 
 		return (
-			app.user.moderating.has(this.channel.id) &&
+			this.channel.isMod &&
 			diff <= 6 * 60 * 60 * 1000 &&
 			(app.user.id === this.author.id || !this.viewer?.moderator)
 		);
@@ -217,9 +217,7 @@ export class UserMessage extends TextualMessage {
 	 * Deletes the message from chat.
 	 */
 	public async delete() {
-		if (!app.user?.moderating.has(this.channel.id)) {
-			return;
-		}
+		if (!app.user || !this.channel.isMod) return;
 
 		await this.channel.client.delete("/moderation/chat", {
 			broadcaster_id: this.channel.id,
@@ -290,9 +288,7 @@ export class UserMessage extends TextualMessage {
 	}
 
 	async #updateHeldMessage(allow: boolean) {
-		if (!app.user?.moderating.has(this.channel.id)) {
-			return;
-		}
+		if (!app.user || !this.channel.isMod) return;
 
 		try {
 			await this.channel.client.post("/moderation/automod/message", {

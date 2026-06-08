@@ -90,6 +90,13 @@ export class Channel {
 		this.pinned = $derived(storage.state.pinned.includes(this.id));
 	}
 
+	/**
+	 * Whether the current user moderates this channel.
+	 */
+	public get isMod() {
+		return app.user?.moderates(this.id) ?? false;
+	}
+
 	public async join(split = false) {
 		if (this.joined) return;
 
@@ -125,7 +132,7 @@ export class Channel {
 			stvId: this.seventvId,
 			setId: this.emoteSetId,
 			login: this.user.username,
-			isMod: app.user?.moderating.has(this.id),
+			isMod: this.isMod,
 		});
 
 		if (settings.state["chat.messages.history.enabled"]) {
@@ -238,9 +245,7 @@ export class Channel {
 	}
 
 	public async blockTerm(term: string) {
-		if (!app.user?.moderating.has(this.id)) {
-			return;
-		}
+		if (!app.user || !this.isMod) return;
 
 		await this.client.post("/moderation/blocked_terms", {
 			params: {
@@ -254,9 +259,7 @@ export class Channel {
 	}
 
 	public async raid(to: string) {
-		if (!app.user?.moderating.has(this.id)) {
-			return;
-		}
+		if (!this.isMod) return;
 
 		await this.client.post("/raids", {
 			params: {
@@ -267,17 +270,13 @@ export class Channel {
 	}
 
 	public async unraid() {
-		if (!app.user?.moderating.has(this.id)) {
-			return;
-		}
+		if (!this.isMod) return;
 
 		await this.client.delete("/raids", { broadcaster_id: this.id });
 	}
 
 	public async shoutout(to: string) {
-		if (!app.user?.moderating.has(this.id)) {
-			return;
-		}
+		if (!app.user || !this.isMod) return;
 
 		await this.client.post("/chat/shoutouts", {
 			params: {

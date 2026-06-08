@@ -155,9 +155,7 @@ export class Chat {
 	}
 
 	public async clear() {
-		if (!app.user?.moderating.has(this.channel.id)) {
-			return;
-		}
+		if (!app.user || !this.channel.isMod) return;
 
 		await this.channel.client.delete("/moderation/chat", {
 			broadcaster_id: this.channel.id,
@@ -174,9 +172,7 @@ export class Chat {
 	}
 
 	public async announce(message: string) {
-		if (!app.user?.moderating.has(this.channel.id)) {
-			return;
-		}
+		if (!app.user || !this.channel.isMod) return;
 
 		await this.channel.client.post("/chat/announcements", {
 			params: {
@@ -190,9 +186,7 @@ export class Chat {
 	}
 
 	public async setShieldMode(active = true) {
-		if (!app.user?.moderating.has(this.channel.id)) {
-			return;
-		}
+		if (!app.user || !this.channel.isMod) return;
 
 		await this.channel.client.put("/moderation/shield_mode", {
 			params: {
@@ -206,9 +200,7 @@ export class Chat {
 	}
 
 	public async updateSettings(settings: ChatSettings) {
-		if (!app.user?.moderating.has(this.channel.id)) {
-			return;
-		}
+		if (!app.user || !this.channel.isMod) return;
 
 		const followDuration =
 			typeof this.mode.followerOnly === "number" ? this.mode.followerOnly : 0;

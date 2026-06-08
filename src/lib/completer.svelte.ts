@@ -147,7 +147,7 @@ export class Completer {
 					return false;
 				}
 
-				if (suggestion.modOnly && !app.user.moderating.has(this.chat.channel.id)) {
+				if (suggestion.modOnly && !this.chat.channel.isMod) {
 					return false;
 				}
 

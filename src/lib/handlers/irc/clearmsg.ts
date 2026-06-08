@@ -17,7 +17,7 @@ export default defineHandler({
 
 		message.deleted = true;
 
-		if (data.is_recent || (!data.is_recent && app.user?.moderating.has(channel.id))) {
+		if (data.is_recent || (!data.is_recent && channel.isMod)) {
 			channel.chat.event(Delete, { text: data.message_text, user: message.author }, data);
 		}
 	},

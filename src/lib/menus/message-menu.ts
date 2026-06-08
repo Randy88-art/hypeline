@@ -1,5 +1,4 @@
 import { Menu, MenuItem, PredefinedMenuItem } from "@tauri-apps/api/menu";
-import { app } from "$lib/app.svelte";
 import type { UserMessage } from "$lib/models/message/user-message";
 
 export async function createMessageMenu(message: UserMessage) {
@@ -29,7 +28,7 @@ export async function createMessageMenu(message: UserMessage) {
 
 	items.push(copy, separator, reply);
 
-	if (app.user?.moderating.has(message.channel.id)) {
+	if (message.channel.isMod) {
 		const deleteMsg = await MenuItem.new({
 			id: "delete",
 			text: "Delete",

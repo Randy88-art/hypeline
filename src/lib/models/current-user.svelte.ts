@@ -22,7 +22,7 @@ export class CurrentUser extends User {
 	/**
 	 * The ids of the channels the current user moderates for.
 	 */
-	public readonly moderating = new Set<string>();
+	public readonly moderating = new SvelteSet<string>();
 
 	/**
 	 * The whisper threads the current user is involved in.
@@ -36,6 +36,13 @@ export class CurrentUser extends User {
 
 	public constructor(user: User) {
 		super(user.client, user.data);
+	}
+
+	/**
+	 * Whether the current user moderates the given channel.
+	 */
+	public moderates(channelId: string) {
+		return this.moderating.has(channelId);
 	}
 
 	public async fetchEmoteSets() {
