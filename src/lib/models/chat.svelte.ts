@@ -13,6 +13,7 @@ import { EventMessage, type EventMessageData } from "./message/event-message";
 import type { Message } from "./message/message";
 import { TextualMessage } from "./message/textual-message.svelte";
 import type { UserMessage } from "./message/user-message";
+import { Pin } from "./pin.svelte";
 import { Viewer } from "./viewer.svelte";
 
 const RATE_LIMIT_WINDOW = 30 * 1000;
@@ -33,6 +34,10 @@ export interface ChatSettings {
 	followerOnly?: boolean;
 	followerOnlyDuration?: number;
 	slow?: number;
+}
+
+interface MessageOptions {
+	pin?: boolean;
 }
 
 export class Chat {
@@ -66,6 +71,8 @@ export class Chat {
 
 	public input = $state<HTMLInputElement | null>(null);
 	public value = $state("");
+
+	public pinned = $state<Pin | null>(null);
 
 	/**
 	 * The message the current user is replying to if any.
@@ -164,6 +171,7 @@ export class Chat {
 	}
 
 	public reset() {
+		this.#setPinned(null);
 		this.#bypassNext = false;
 		this.#lastRecentAt = null;
 		this.replyTarget = null;
@@ -183,6 +191,32 @@ export class Chat {
 				message,
 			},
 		});
+	}
+
+	public async pin(id: string) {
+		if (!app.user || !this.channel.isMod) return;
+
+		await this.channel.client.put("/chat/pins", {
+			params: {
+				broadcaster_id: this.channel.id,
+				moderator_id: app.user.id,
+				message_id: id,
+			},
+		});
+	}
+
+	public async fetchPinned() {
+		const pin = await Pin.fetch(this);
+
+		if (pin && this.pinned?.message.id === pin.message.id) {
+			pin.hidden = this.pinned.hidden;
+		}
+
+		this.#setPinned(pin);
+	}
+
+	public clearPin(pin = this.pinned) {
+		if (this.pinned === pin) this.#setPinned(null);
 	}
 
 	public async setShieldMode(active = true) {
@@ -225,7 +259,7 @@ export class Chat {
 		});
 	}
 
-	public async send(message: string) {
+	public async send(message: string, options?: MessageOptions) {
 		if (!app.user) return;
 
 		const viewer = this.channel.viewers.get(app.user.id) ?? new Viewer(this.channel, app.user);
@@ -283,6 +317,7 @@ export class Chat {
 				sender_id: viewer.id,
 				reply_parent_message_id: replyId,
 				message,
+				pin: options?.pin ?? false,
 			},
 		});
 
@@ -328,5 +363,10 @@ export class Chat {
 
 		queue.push(now);
 		return false;
+	}
+
+	#setPinned(pin: Pin | null) {
+		this.pinned?.dispose();
+		this.pinned = pin;
 	}
 }
