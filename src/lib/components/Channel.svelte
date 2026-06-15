@@ -8,6 +8,7 @@
 	import { handlers } from "$lib/handlers";
 	import type { Channel } from "$lib/models/channel.svelte";
 	import type { IrcMessage } from "$lib/twitch/irc";
+	import Pinned from "./chat/Pinned.svelte";
 
 	interface Props {
 		channel: Channel;
@@ -38,7 +39,13 @@
 		<StreamHeader stream={channel.stream} />
 	{/if}
 
-	<Chat class="grow" chat={channel.chat} />
+	<div class="relative grow">
+		{#if channel.chat.pinned && !channel.chat.pinned.hidden}
+			<Pinned pin={channel.chat.pinned} />
+		{/if}
+
+		<Chat chat={channel.chat} />
+	</div>
 
 	<div class="p-2">
 		<ChatInput chat={channel.chat} />
