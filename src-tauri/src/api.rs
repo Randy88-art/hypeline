@@ -164,7 +164,7 @@ pub async fn join(
 
             if let Some(pubsub) = pubsub {
                 let topics = vec![
-                    format!("channel-points-channel-v1.{id}"),
+                    format!("community-points-channel-v1.{id}"),
                     format!("pinned-chat-updates-v1.{id}"),
                     format!("predictions-channel-v1.{id}"),
                     format!("polls.{id}"),
