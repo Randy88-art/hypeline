@@ -123,7 +123,7 @@ impl PubSubClient {
             backoff = INITIAL_BACKOFF;
 
             self.state.set_connected(true);
-            self.relisten_all().await;
+            self.restore().await;
             self.listen_user_topics();
 
             let mut ping_interval = tokio::time::interval(PING_INTERVAL);
@@ -291,7 +291,7 @@ impl PubSubClient {
         self.send_listen("LISTEN", &[topic]);
     }
 
-    async fn relisten_all(&self) {
+    async fn restore(&self) {
         let drained = self.subscriptions.drain().await;
 
         if drained.is_empty() {
@@ -322,40 +322,40 @@ impl PubSubClient {
         self.state.connected()
     }
 
-    #[tracing::instrument(name = "pubsub_listen", skip(self))]
-    pub async fn subscribe(&self, channel: &str, topic: &str) {
-        self.send_listen("LISTEN", &[topic.to_string()]);
-        self.subscriptions
-            .insert(channel, topic, topic.to_string())
-            .await;
-
-        tracing::trace!("Listening to topic");
-    }
-
-    pub async fn subscribe_all(&self, channel: &str, topics: &[String]) {
-        let futures = topics.iter().map(|topic| self.subscribe(channel, topic));
-        join_all(futures).await;
-    }
-
-    pub async fn unsubscribe(&self, channel: &str, topic: &str) {
-        if self.subscriptions.remove(channel, topic).await.is_some() {
-            self.send_listen("UNLISTEN", &[topic.to_string()]);
+    #[tracing::instrument(name = "pubsub_listen", skip(self, topics))]
+    pub async fn listen(&self, channel: &str, topics: &[String]) {
+        for chunk in topics.chunks(MAX_TOPICS_PER_LISTEN) {
+            self.send_listen("LISTEN", chunk);
         }
-    }
 
-    pub async fn unsubscribe_all(&self, channel: &str) {
-        let topics = self.subscriptions.events_for_channel(channel).await;
-        let futures = topics.iter().map(|topic| self.unsubscribe(channel, topic));
-
+        let futures = topics
+            .iter()
+            .map(|topic| self.subscriptions.insert(channel, topic, topic.clone()));
         join_all(futures).await;
+
+        tracing::trace!("Listening to {} topics", topics.len());
     }
 
-    pub async fn resubscribe_all(&self, channel: &str) {
+    #[tracing::instrument(name = "pubsub_unlisten", skip(self))]
+    pub async fn unlisten(&self, channel: &str) {
         let topics = self.subscriptions.events_for_channel(channel).await;
 
-        for topic in &topics {
-            self.send_listen("UNLISTEN", &[topic.to_string()]);
-            self.send_listen("LISTEN", &[topic.to_string()]);
+        let futures = topics
+            .iter()
+            .map(|topic| self.subscriptions.remove(channel, topic));
+        let removed: Vec<String> = join_all(futures).await.into_iter().flatten().collect();
+
+        for chunk in removed.chunks(MAX_TOPICS_PER_LISTEN) {
+            self.send_listen("UNLISTEN", chunk);
         }
+
+        tracing::trace!("Stopped listening to {} topics", removed.len());
+    }
+
+    pub async fn relisten(&self, channel: &str) {
+        let topics = self.subscriptions.events_for_channel(channel).await;
+
+        self.send_listen("UNLISTEN", &topics);
+        self.send_listen("LISTEN", &topics);
     }
 }

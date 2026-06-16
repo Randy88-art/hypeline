@@ -170,7 +170,7 @@ pub async fn join(
                     format!("polls.{id}"),
                 ];
 
-                pubsub.subscribe_all(&login_clone, &topics).await;
+                pubsub.listen(&login_clone, &topics).await;
             }
         }
         .in_current_span(),
@@ -196,7 +196,7 @@ pub async fn leave(state: State<'_, Mutex<AppState>>, channel: String) -> Result
     }
 
     if let Some(ref pubsub) = state.pubsub {
-        pubsub.unsubscribe_all(&channel).await;
+        pubsub.unlisten(&channel).await;
     }
 
     if let Some(ref irc) = state.irc {
@@ -228,7 +228,7 @@ pub async fn rejoin(state: State<'_, Mutex<AppState>>, channel: String) -> Resul
     }
 
     if let Some(pubsub) = pubsub {
-        pubsub.resubscribe_all(&channel).await;
+        pubsub.relisten(&channel).await;
     }
 
     if let Some(irc) = irc {
