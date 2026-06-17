@@ -92,7 +92,15 @@ export default defineConfig({
 			"no-underscore-dangle": ["error", { allow: ["__typename"] }],
 			"typescript/adjacent-overload-signatures": "error",
 			"typescript/no-floating-promises": "allow",
-			"unicorn/filename-case": ["error", { ignore: ".*\\.svelte$" }],
+			"unicorn/filename-case": [
+				"error",
+				{
+					cases: {
+						kebabCase: true,
+						pascalCase: true,
+					},
+				},
+			],
 			"unicorn/no-null": "allow",
 			"unicorn/number-literal-case": "error",
 		},
