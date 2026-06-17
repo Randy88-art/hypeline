@@ -23,6 +23,9 @@ jobs:
       - id: release
         name: Open pull request
         uses: googleapis/release-please-action@v5
+        with:
+          config-file: .github/release-please-config.json
+          manifest-file: .github/.release-please-manifest.json
 
   build:
     name: Build
