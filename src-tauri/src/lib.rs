@@ -8,11 +8,10 @@ use irc::IrcClient;
 use pubsub::PubSubClient;
 use reqwest::header::HeaderMap;
 use seventv::SeventTvClient;
+use tauri::Manager;
 use tauri::async_runtime::{self, Mutex};
 use tauri::ipc::Invoke;
-use tauri::{Manager, WindowEvent};
 use tauri_plugin_cache::{CacheConfig, CompressionMethod};
-use tauri_plugin_svelte::ManagerExt;
 use twitch_api::HelixClient;
 use twitch_api::twitch_oauth2::UserToken;
 
@@ -118,30 +117,6 @@ pub fn run() {
             app.manage(system);
 
             Ok(())
-        })
-        .on_window_event(|window, event| {
-            if let WindowEvent::CloseRequested { .. } = event {
-                let app_handle = window.app_handle();
-
-                match window.label() {
-                    "main" => {
-                        if let Some(settings_win) =
-                            window.app_handle().get_webview_window("settings")
-                        {
-                            settings_win
-                                .close()
-                                .expect("failed to close settings window");
-                        }
-                    }
-                    "settings" => {
-                        app_handle
-                            .svelte()
-                            .save("settings")
-                            .expect("failed to save settings while closing window");
-                    }
-                    _ => (),
-                }
-            }
         })
         .invoke_handler(get_handler())
         .run(tauri::generate_context!())
