@@ -29,7 +29,6 @@ export interface Settings {
 	"splits.defaultOrientation": "horizontal" | "vertical";
 	"splits.closeBehavior": "preserve" | "remove";
 	"splits.leaveOnClose": boolean;
-	"splits.goToChannelAfterClose": boolean;
 
 	"chat.hideScrollbar": boolean;
 	"chat.newSeparator": boolean;
@@ -78,7 +77,6 @@ export const defaults: Settings = {
 	"splits.defaultOrientation": "horizontal",
 	"splits.closeBehavior": "remove",
 	"splits.leaveOnClose": true,
-	"splits.goToChannelAfterClose": true,
 	"chat.hideScrollbar": false,
 	"chat.newSeparator": false,
 	"chat.embeds": true,

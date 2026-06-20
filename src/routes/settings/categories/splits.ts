@@ -51,12 +51,5 @@ export default {
 			label: "Leave channel on close",
 			description: "Automatically leave the channel contained in a split when closing it.",
 		},
-		{
-			id: "splits.goToChannelAfterClose",
-			type: "switch",
-			label: "Go to channel after closing last split",
-			description:
-				"If the closed split was the last one in the layout, navigate to the channel it contained. If the close behavior is set to <code>Preserve</code>, this will have no effect unless the split is force closed.",
-		},
 	],
 } satisfies SettingsCategory;

@@ -1,11 +1,11 @@
 <script lang="ts">
+	import { tick } from "svelte";
 	import type { Attachment } from "svelte/attachments";
-	import { goto } from "$app/navigation";
-	import { resolve } from "$app/paths";
 	import { app } from "$lib/app.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { settings } from "$lib/settings";
 	import { emptyPaneId, isEmptyPaneId } from "$lib/split-layout";
+	import { storage } from "$lib/stores";
 	import DotsSix from "~icons/ph/dots-six";
 	import SquareHalfBottom from "~icons/ph/square-half-bottom-fill";
 	import SquareHalf from "~icons/ph/square-half-fill";
@@ -28,27 +28,15 @@
 			!event.shiftKey;
 
 		if (app.splits.root === id) {
-			if (preserve) {
-				app.splits.replace(id, emptyPaneId());
-
-				if (settings.state["splits.leaveOnClose"]) {
-					await channel?.leave();
-				}
-
-				return;
-			}
-
-			if (channel && settings.state["splits.goToChannelAfterClose"]) {
-				await goto(
-					resolve("/(main)/channels/[username]", {
-						username: channel.user.username,
-					}),
-				);
-			} else {
-				await goto(resolve("/"));
-			}
-
 			app.splits.root = null;
+
+			await tick();
+			await storage.saveNow();
+
+			if (settings.state["splits.leaveOnClose"]) {
+				await channel?.leave();
+			}
+
 			return;
 		}
 
