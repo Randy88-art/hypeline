@@ -14,7 +14,9 @@ use tauri::{Manager, WindowEvent};
 use tauri_plugin_cache::{CacheConfig, CompressionMethod};
 use tauri_plugin_svelte::ManagerExt;
 use twitch_api::HelixClient;
-use twitch_api::twitch_oauth2::{AccessToken, UserToken};
+use twitch_api::twitch_oauth2::UserToken;
+
+use crate::api::refresh_access_token;
 
 mod api;
 mod commands;
@@ -24,7 +26,6 @@ mod irc;
 mod json;
 mod log;
 mod pubsub;
-mod server;
 mod seventv;
 mod ws;
 
@@ -68,7 +69,7 @@ pub fn run() {
     let mut system = sysinfo::System::new_all();
     system.refresh_all();
 
-    let mut builder = tauri::Builder::default().plugin(tauri_plugin_process::init());
+    let mut builder = tauri::Builder::default().plugin(tauri_plugin_http::init());
     let mut state = AppState::default();
 
     #[cfg(desktop)]
@@ -88,11 +89,13 @@ pub fn run() {
             ..Default::default()
         }))
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_window_state::Builder::new().build())
         .setup(|app| {
@@ -108,27 +111,7 @@ pub fn run() {
             app_handle.plugin(svelte)?;
 
             async_runtime::block_on(async {
-                let stored_token = app_handle
-                    .svelte()
-                    .get_raw("storage", "user")
-                    .and_then(|user| user["token"].as_str().map(|t| t.to_string()));
-
-                let access_token = if let Some(token) = stored_token {
-                    UserToken::from_token(&state.helix, AccessToken::from(token))
-                        .await
-                        .ok()
-                } else {
-                    None
-                };
-
-                if let Some(ref token) = access_token {
-                    tracing::debug!(
-                        token = token.access_token.as_str(),
-                        "Using access token from storage",
-                    );
-                }
-
-                state.token = access_token;
+                state.token = refresh_access_token(&state.helix).await.ok();
             });
 
             app.manage(Mutex::new(state));
@@ -171,6 +154,9 @@ fn get_handler() -> impl Fn(Invoke) -> bool {
         api::leave,
         api::rejoin,
         api::fetch_user_emotes,
+        api::store_tokens,
+        api::get_token,
+        api::refresh_token,
         commands::fetch_recent_messages,
         commands::get_cache_size,
         commands::get_debug_info,
@@ -179,7 +165,6 @@ fn get_handler() -> impl Fn(Invoke) -> bool {
         log::log,
         log::update_log_level,
         pubsub::connect_pubsub,
-        server::start_server,
         seventv::connect_seventv,
         seventv::resub_emote_set,
     ]

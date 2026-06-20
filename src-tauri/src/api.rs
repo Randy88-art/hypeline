@@ -1,19 +1,49 @@
 use anyhow::anyhow;
 use futures::TryStreamExt;
-use serde::{Deserialize, Serialize};
+use keyring::Entry;
+use serde::Deserialize;
 use serde_json::json;
 use tauri::{AppHandle, Emitter, Manager, State, async_runtime};
 use tokio::sync::Mutex;
 use tracing::Instrument;
+use twitch_api::HelixClient;
 use twitch_api::eventsub::EventType;
 use twitch_api::twitch_oauth2::{AccessToken, UserToken};
 
-use crate::AppState;
 use crate::error::Error;
+use crate::{AppState, HTTP};
 
 #[derive(Debug, Deserialize)]
 pub struct Response<T> {
     pub data: T,
+}
+
+#[derive(Debug, Deserialize)]
+struct TokenResponse {
+    access_token: String,
+    refresh_token: String,
+}
+
+pub async fn refresh_access_token(
+    helix: &HelixClient<'static, reqwest::Client>,
+) -> Result<UserToken, Error> {
+    let refresh_token = Entry::new("com.hyperion.chat", "refresh-token")?.get_password()?;
+
+    let tokens = HTTP
+        .post("https://usehyperion.app/api/auth/twitch/refresh")
+        .json(&json!({ "refresh_token": refresh_token }))
+        .send()
+        .await?
+        .error_for_status()?
+        .json::<TokenResponse>()
+        .await?;
+
+    Entry::new("com.hyperion.chat", "access-token")?.set_password(&tokens.access_token)?;
+    Entry::new("com.hyperion.chat", "refresh-token")?.set_password(&tokens.refresh_token)?;
+
+    UserToken::from_token(helix, AccessToken::new(tokens.access_token))
+        .await
+        .map_err(|err| Error::Generic(anyhow!("Failed to validate refreshed token: {err}")))
 }
 
 pub fn get_access_token(state: &AppState) -> Result<&UserToken, Error> {
@@ -23,33 +53,48 @@ pub fn get_access_token(state: &AppState) -> Result<&UserToken, Error> {
     })
 }
 
-#[derive(Clone, Serialize)]
-pub struct TokenInfo {
-    user_id: String,
-    access_token: String,
-}
-
-pub async fn set_access_token(
+#[tauri::command]
+pub async fn store_tokens(
     state: State<'_, Mutex<AppState>>,
-    token: String,
-) -> Option<TokenInfo> {
+    access_token: String,
+    refresh_token: String,
+) -> Result<(), Error> {
     let mut state = state.lock().await;
 
-    state.token = UserToken::from_token(&state.helix, AccessToken::from(token))
+    let at_entry = Entry::new("com.hyperion.chat", "access-token")?;
+    at_entry.set_password(&access_token)?;
+
+    let rt_entry = Entry::new("com.hyperion.chat", "refresh-token")?;
+    rt_entry.set_password(&refresh_token)?;
+
+    state.token = UserToken::from_token(&state.helix, AccessToken::new(access_token))
         .await
         .ok();
 
-    if let Some(ref token) = state.token {
-        let raw_token = token.access_token.as_str();
-        tracing::debug!("Set access token to {}", raw_token);
+    Ok(())
+}
 
-        Some(TokenInfo {
-            user_id: token.user_id.to_string(),
-            access_token: raw_token.to_string(),
-        })
-    } else {
-        None
-    }
+#[tauri::command]
+pub async fn get_token(state: State<'_, Mutex<AppState>>) -> Result<Option<String>, Error> {
+    let state = state.lock().await;
+
+    Ok(state
+        .token
+        .as_ref()
+        .map(|token| token.access_token.as_str().to_string()))
+}
+
+#[tauri::command]
+pub async fn refresh_token(state: State<'_, Mutex<AppState>>) -> Result<Option<String>, Error> {
+    let mut state = state.lock().await;
+
+    let token = refresh_access_token(&state.helix).await?;
+    let access_token = token.access_token.as_str().to_string();
+    state.token = Some(token);
+
+    tracing::info!("Refreshed access token");
+
+    Ok(Some(access_token))
 }
 
 #[tracing::instrument(skip(state, is_mod))]

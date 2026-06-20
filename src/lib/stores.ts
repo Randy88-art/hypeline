@@ -3,16 +3,10 @@ import type { User } from "./graphql/twitch";
 import { settings } from "./settings";
 import type { SplitNode } from "./split-layout";
 
-interface AccountUser {
-	id: string;
-	token: string;
-	data: User;
-}
-
 interface Storage {
 	[key: string]: unknown;
-	user: AccountUser | null;
-	accounts: AccountUser[];
+	user: User | null;
+	accounts: User[];
 	lastJoined: string | null;
 	pinned: string[];
 }
