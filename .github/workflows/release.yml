@@ -17,8 +17,8 @@ jobs:
       contents: write
       pull-requests: write
     outputs:
-      release_created: ${{ steps.release.outputs['src-tauri--release_created'] }}
-      tag_name: ${{ steps.release.outputs['src-tauri--tag_name'] }}
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - id: release
         name: Open pull request
@@ -26,6 +26,21 @@ jobs:
         with:
           config-file: .github/release-please-config.json
           manifest-file: .github/.release-please-manifest.json
+      - uses: actions/checkout@v4
+        if: ${{ steps.release.outputs.pr }}
+        with:
+          ref: ${{ fromJson(steps.release.outputs.pr).headBranchName }}
+
+      - name: Bump Cargo lockfile
+        if: ${{ steps.release.outputs.pr }}
+        run: |
+          cd src-tauri
+          cargo generate-lockfile
+
+          git config user.name github-actions[bot]
+          git config user.email github-actions[bot]@users.noreply.github.com
+          git add Cargo.lock
+          git diff-index --quiet HEAD || git commit -m "chore: update Cargo.lock" && git push
 
   build:
     name: Build
