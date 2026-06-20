@@ -31,14 +31,18 @@
 	$effect(() => {
 		if (isDragging) {
 			addEventListener("pointermove", handlePointerMove);
-			addEventListener("pointerup", () => (isDragging = false));
+			addEventListener("pointerup", handlePointerUp);
 		}
 
 		return () => {
 			removeEventListener("pointermove", handlePointerMove);
-			removeEventListener("pointerup", () => (isDragging = false));
+			removeEventListener("pointerup", handlePointerUp);
 		};
 	});
+
+	function handlePointerUp() {
+		isDragging = false;
+	}
 
 	function handlePointerMove(event: PointerEvent) {
 		if (!isDragging || !well) return;
