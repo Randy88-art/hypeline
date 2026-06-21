@@ -10,6 +10,7 @@ import type {
 	UserNoticeEvent,
 	UserNoticeMessage,
 } from "$lib/twitch/irc";
+import type { ChannelPointReward } from "$lib/twitch/pubsub";
 import { extractEmotes, type Prefix } from "$lib/util";
 import { Badge } from "../badge";
 import type { Channel } from "../channel.svelte";
@@ -112,6 +113,11 @@ export class UserMessage extends TextualMessage {
 	 */
 	public autoMod: AutoModMetadata | null = null;
 
+	/**
+	 * The channel point reward redeemed to send this message, if any.
+	 */
+	public redemption = $state<ChannelPointReward | null>(null);
+
 	public constructor(
 		channel: Channel,
 		public readonly data: PrivmsgMessage | UserNoticeMessage,
@@ -167,6 +173,7 @@ export class UserMessage extends TextualMessage {
 			is_highlighted: false,
 			is_mod: false,
 			is_subscriber: false,
+			custom_reward_id: null,
 			is_recent: false,
 			is_returning_chatter: false,
 			reply: null,
