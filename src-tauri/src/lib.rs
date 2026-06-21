@@ -1,4 +1,3 @@
-#![feature(try_blocks)]
 #![allow(clippy::result_large_err)]
 
 use std::sync::{Arc, LazyLock};

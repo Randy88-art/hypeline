@@ -137,7 +137,6 @@ export class User {
 		this.avatarUrl = $state(data.profileImageURL ?? "");
 		this.bannerUrl = $state(data.bannerImageURL ?? "");
 
-		// this.badge = $derived(app.u2b.get(this.id));
 		this.paint = $derived(app.u2p.get(this.id));
 	}
 
