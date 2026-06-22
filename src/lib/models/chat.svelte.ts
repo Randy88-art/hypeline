@@ -177,12 +177,14 @@ export class Chat {
 	}
 
 	public reset() {
-		this.#setPinned(null);
 		this.#bypassNext = false;
 		this.#lastRecentAt = null;
 		this.replyTarget = null;
 		this.messages = [];
 		this.history = [];
+
+		this.clearPin();
+
 		this.redemptions.clear();
 	}
 
