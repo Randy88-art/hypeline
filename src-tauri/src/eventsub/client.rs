@@ -388,6 +388,15 @@ impl EventSubClient {
             return Err(Error::Generic(anyhow!("No EventSub connection")));
         };
 
+        if self
+            .subscriptions
+            .contains(username, &event.to_string())
+            .await
+        {
+            tracing::trace!("Already subscribed, skipping");
+            return Ok(());
+        }
+
         let version = if V2_EVENTS.contains(&event) { "2" } else { "1" };
 
         let body = json!({
