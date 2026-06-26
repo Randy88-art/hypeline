@@ -24,6 +24,10 @@ type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 export interface HelixResponse<T> {
 	data: T;
+	pagination?: {
+		cursor?: string;
+	};
+	total?: number;
 }
 
 const BASE_URL = "https://api.twitch.tv/helix";
@@ -94,6 +98,20 @@ export class TwitchClient {
 
 	public get<T>(path: `/${string}`, params?: QueryParams) {
 		return this.#request<T>("GET", path, { params });
+	}
+
+	public async getAll<T>(path: `/${string}`, params?: QueryParams): Promise<T[]> {
+		const results: T[] = [];
+		let after: string | undefined;
+
+		do {
+			const { data, pagination } = await this.get<T[]>(path, { ...params, after });
+
+			results.push(...data);
+			after = pagination?.cursor || undefined;
+		} while (after);
+
+		return results;
 	}
 
 	public post<T>(path: `/${string}`, options?: FetchOptions) {
