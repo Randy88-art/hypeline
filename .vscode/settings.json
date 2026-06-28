@@ -9,6 +9,9 @@
 	"oxc.fmt.configPath": "./vite.config.ts",
 	"js/ts.tsdk.path": "node_modules/typescript/lib",
 	"rust-analyzer.check.command": "clippy",
+	"[svelte]": {
+		"editor.defaultFormatter": "oxc.oxc-vscode"
+	},
 	"[graphql]": {
 		"editor.tabSize": 2,
 		"editor.insertSpaces": true
