@@ -62,7 +62,7 @@ export const SCOPES = [
 
 async function getTokens(id: string) {
 	const response = await fetch(`https://usehyperion.app/api/auth/twitch/tokens?user_id=${id}`);
-	if (!response.ok) return;
+	if (!response.ok) return null;
 
 	return response.json();
 }
@@ -110,7 +110,7 @@ export async function logOut() {
 	await tick();
 	await storage.saveNow();
 
-	await fetch("http://localhost:5173/api/auth/twitch/revoke", {
+	await fetch("https://usehyperion.app/api/auth/twitch/revoke", {
 		method: "POST",
 		headers: {
 			Authorization: app.twitch.token,
