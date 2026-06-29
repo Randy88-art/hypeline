@@ -1,3 +1,4 @@
+import adapter from "@sveltejs/adapter-static";
 import { sveltekit } from "@sveltejs/kit/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { FileSystemIconLoader } from "unplugin-icons/loaders";
@@ -15,7 +16,9 @@ export default defineConfig({
 	plugins: [
 		devtoolsJson(),
 		tailwindcss(),
-		sveltekit(),
+		sveltekit({
+			adapter: adapter({ fallback: "index.html" }),
+		}),
 		icons({
 			compiler: "svelte",
 			customCollections: {
