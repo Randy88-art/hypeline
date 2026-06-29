@@ -237,6 +237,8 @@ export class UserMessage extends TextualMessage {
 
 		this.source = await app.channels.fetch(source.channel_id);
 		await this.source.fetchBadges();
+
+		this.#populateBadges();
 	}
 
 	/**
@@ -273,6 +275,8 @@ export class UserMessage extends TextualMessage {
 	}
 
 	#populateBadges() {
+		this.badges.length = 0;
+
 		if (this.shared) {
 			const { user } = this.source;
 
