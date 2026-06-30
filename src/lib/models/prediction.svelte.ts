@@ -1,3 +1,4 @@
+import { sumOf } from "c8n";
 import type { Prediction as ApiPrediction, PredictionStatus } from "$lib/twitch/pubsub";
 import type { Channel } from "./channel.svelte";
 import type { User } from "./user.svelte";
@@ -55,12 +56,12 @@ export class Prediction {
 	/**
 	 * The total number of channel points wagered across all outcomes.
 	 */
-	public readonly totalPoints = $derived(this.outcomes.reduce((sum, o) => sum + o.points, 0));
+	public readonly totalPoints = $derived(sumOf(this.outcomes, (o) => o.points));
 
 	/**
 	 * The total number of users who have predicted.
 	 */
-	public readonly totalUsers = $derived(this.outcomes.reduce((sum, o) => sum + o.users, 0));
+	public readonly totalUsers = $derived(sumOf(this.outcomes, (o) => o.users));
 
 	public constructor(
 		/**

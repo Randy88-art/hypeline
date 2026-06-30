@@ -156,16 +156,6 @@ export function dedupe<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
 	return promise;
 }
 
-export function chunk<T>(items: T[], size: number): T[][] {
-	const chunks: T[][] = [];
-
-	for (let i = 0; i < items.length; i += size) {
-		chunks.push(items.slice(i, i + size));
-	}
-
-	return chunks;
-}
-
 export async function mapPool<T, R>(
 	items: T[],
 	limit: number,
@@ -192,25 +182,4 @@ export async function openMenu(event: MouseEvent, menufn: () => Promise<Menu>) {
 
 	const menu = await menufn();
 	await menu.popup();
-}
-
-// https://github.com/tc39/proposal-upsert
-export function getOrInsert<K, V>(map: Map<K, V>, key: K, defaultValue: V): V {
-	if (map.has(key)) {
-		return map.get(key)!;
-	}
-
-	map.set(key, defaultValue);
-	return defaultValue;
-}
-
-export function getOrInsertComputed<K, V>(map: Map<K, V>, key: K, defaultValue: () => V): V {
-	if (map.has(key)) {
-		return map.get(key)!;
-	}
-
-	const value = defaultValue();
-	map.set(key, value);
-
-	return value;
 }

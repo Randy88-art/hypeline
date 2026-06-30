@@ -1,3 +1,4 @@
+import { filterMap } from "c8n";
 import { app } from "$lib/app.svelte";
 import { pinnedMessageQuery, toStructuredMessage } from "$lib/graphql/twitch";
 import type { Chat } from "./chat.svelte";
@@ -76,9 +77,9 @@ export class Pin {
 				sender,
 				data: {
 					name_color: sender.chatColor ?? "",
-					badges: sender.displayBadges
-						.filter((badge) => badge !== null)
-						.map((badge) => ({ name: badge.setID, version: badge.version })),
+					badges: filterMap(sender.displayBadges, (badge) =>
+						badge ? { name: badge.setID, version: badge.version } : null,
+					).toArray(),
 					server_timestamp: new Date(node.pinnedMessage.sentAt).getTime(),
 				},
 			});
