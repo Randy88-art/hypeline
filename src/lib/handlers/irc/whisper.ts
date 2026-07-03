@@ -1,7 +1,7 @@
-import { filterMap, getOrSetWith } from "c8n";
 import { page } from "$app/state";
 import { app } from "$lib/app.svelte";
 import { Whisper } from "$lib/models/whisper.svelte";
+import { getOrInsertComputed } from "$lib/util";
 import { defineHandler } from "../helper";
 
 export default defineHandler({
@@ -11,7 +11,7 @@ export default defineHandler({
 
 		const sender = await app.twitch.users.fetch(data.sender.id);
 
-		const whisper = getOrSetWith(
+		const whisper = getOrInsertComputed(
 			app.user.whispers,
 			sender.id,
 			() => new Whisper(app.twitch, sender),
@@ -20,9 +20,9 @@ export default defineHandler({
 		whisper.messages.push({
 			id: data.message_id,
 			createdAt: new Date(),
-			badges: filterMap(data.badges, (b) =>
-				app.badges.get(`${b.name}:${b.version}`),
-			).toArray(),
+			badges: data.badges
+				.map((b) => app.badges.get(`${b.name}:${b.version}`))
+				.filter((b) => b != null),
 			user: sender,
 			text: data.message_text,
 		});

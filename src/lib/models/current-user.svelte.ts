@@ -1,4 +1,3 @@
-import { chunks } from "c8n";
 import { SvelteMap, SvelteSet } from "svelte/reactivity";
 import { app } from "$lib/app.svelte";
 import { transform7tvEmote } from "$lib/emotes";
@@ -8,7 +7,7 @@ import { userEmoteSetsQuery } from "$lib/graphql/7tv";
 import { followedChannelsQuery } from "$lib/graphql/twitch";
 import { log } from "$lib/log";
 import type { FollowedChannel, UserEmote } from "$lib/twitch/api";
-import { mapPool } from "$lib/util";
+import { chunk, mapPool } from "$lib/util";
 import { Channel } from "./channel.svelte";
 import { Stream } from "./stream.svelte";
 import { User } from "./user.svelte";
@@ -78,10 +77,10 @@ export class CurrentUser extends User {
 			first: 100,
 		});
 
-		const batches = chunks(
+		const batches = chunk(
 			followed.map((channel) => channel.broadcaster_id),
 			FOLLOWING_BATCH_SIZE,
-		).toArray();
+		);
 
 		await mapPool(batches, FETCH_CONCURRENCY, (ids) => this.#loadChannels(ids));
 	}

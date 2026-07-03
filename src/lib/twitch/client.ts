@@ -2,7 +2,6 @@
 // oxlint-disable no-await-in-loop
 
 import { invoke } from "@tauri-apps/api/core";
-import { compact } from "c8n";
 import { FetchError, ofetch } from "ofetch";
 import { ApiError } from "$lib/errors/api-error";
 import { sendTwitch } from "$lib/graphql";
@@ -47,7 +46,7 @@ function cleanQuery(params: QueryParams): QueryParams {
 		if (value === undefined || value === null) continue;
 
 		if (Array.isArray(value)) {
-			const items = compact(value).toArray();
+			const items = value.filter((v) => v !== undefined && v !== null);
 			if (items.length) cleaned[key] = items;
 		} else {
 			cleaned[key] = value;

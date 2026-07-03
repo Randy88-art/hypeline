@@ -1,4 +1,3 @@
-import { sumOf } from "c8n";
 import { app } from "$lib/app.svelte";
 import { settings } from "$lib/settings";
 import type { StructuredMessage } from "$lib/twitch/api";
@@ -159,9 +158,9 @@ export class UserMessage extends TextualMessage {
 			type: "privmsg",
 			badge_info: [],
 			badges: [],
-			bits: sumOf(init.message.fragments, (f) => {
-				return f.type === "cheermote" ? f.cheermote.bits : 0;
-			}),
+			bits: init.message.fragments.reduce((a, b) => {
+				return a + (b.type === "cheermote" ? b.cheermote.bits : 0);
+			}, 0),
 			channel_id: "",
 			channel_login: "",
 			deleted: false,

@@ -7,7 +7,6 @@ catalog:
 minimumReleaseAgeExclude:
   - "@voidzero-dev/*"
   - vite-plus
-  - c8n
 overrides:
   vite: "catalog:"
   vitest: "catalog:"

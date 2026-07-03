@@ -114,7 +114,13 @@ function groupByProvider(emotes: Iterable<Emote>): Map<EmoteProvider, Emote[]> {
 	const groups = new Map<EmoteProvider, Emote[]>();
 
 	for (const emote of emotes) {
-		groups.getOrInsert(emote.provider, []).push(emote);
+		const group = groups.get(emote.provider);
+
+		if (group) {
+			group.push(emote);
+		} else {
+			groups.set(emote.provider, [emote]);
+		}
 	}
 
 	return groups;
