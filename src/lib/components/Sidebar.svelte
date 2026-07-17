@@ -19,13 +19,10 @@
 
 	const unread = $derived(app.user?.whispers.values().reduce((sum, w) => sum + w.unread, 0));
 
-	createHotkeys(
-		[
-			{ hotkey: "Mod+B", callback: () => sidebar.cycle() },
-			{ hotkey: "Mod+Shift+B", callback: () => sidebar.toggle() },
-		],
-		{ requireReset: true },
-	);
+	createHotkeys([
+		{ hotkey: "Mod+B", callback: () => sidebar.cycle() },
+		{ hotkey: "Mod+Shift+B", callback: () => sidebar.toggle() },
+	]);
 </script>
 
 <ScrollArea.Root

@@ -1,16 +1,13 @@
 <script lang="ts">
 	import "../app.css";
+	import { setHotkeysContext } from "@tanstack/svelte-hotkeys";
 	import { invoke } from "@tauri-apps/api/core";
 	import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 	import { ModeWatcher } from "mode-watcher";
 	import { onDestroy, onMount } from "svelte";
-	import { goto } from "$app/navigation";
-	import { app } from "$lib/app.svelte";
 	import TitleBar from "$lib/components/TitleBar.svelte";
 	import { log } from "$lib/log";
-	import { CurrentUser } from "$lib/models/current-user.svelte";
 	import { settings } from "$lib/settings";
-	import { storage } from "$lib/stores";
 	import { injectTheme } from "$lib/themes";
 	import { handleDeepLink } from "$lib/twitch/auth";
 
@@ -27,6 +24,12 @@
 	});
 
 	onDestroy(() => unlisten?.());
+
+	setHotkeysContext({
+		hotkey: {
+			requireReset: true,
+		},
+	});
 
 	$effect(() => {
 		invoke("update_log_level", { level: settings.state["advanced.logs.level"] });
