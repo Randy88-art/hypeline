@@ -155,7 +155,7 @@ importers:
         specifier: ^1.4.0
         version: 1.4.0
       typescript:
-        specifier: ~6.0.3
+        specifier: ^6
         version: 6.0.3
       unplugin-icons:
         specifier: ^23.0.1
