@@ -3,7 +3,6 @@ import { SvelteMap } from "svelte/reactivity";
 import { goto } from "$app/navigation";
 import { page } from "$app/state";
 import type { EmoteSet } from "./emotes";
-import type { Badge } from "./graphql/twitch";
 import { handlers } from "./handlers";
 import { History } from "./history.svelte";
 import { log } from "./log";
@@ -76,8 +75,7 @@ class App {
 	 */
 	public readonly paints = new Map<string, Paint>();
 
-	// Associates a (u)ser id to a 7TV (b)adge or (p)aint.
-	public readonly u2b = new SvelteMap<string, Badge | undefined>();
+	// Associates a (u)ser id to a 7TV (p)aint.
 	public readonly u2p = new SvelteMap<string, Paint | undefined>();
 
 	/**
