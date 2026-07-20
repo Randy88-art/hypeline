@@ -19,7 +19,7 @@ export const storage = new RuneStore<Storage>(
 		accounts: [],
 		layout: null,
 		pinned: [],
-		sidebar: "expanded",
+		sidebar: "collapsed",
 	},
 	{
 		autoStart: true,
