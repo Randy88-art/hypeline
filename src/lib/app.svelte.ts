@@ -12,9 +12,8 @@ import { ChannelManager } from "./managers/channel-manager";
 import { EmoteManager } from "./managers/emote-manager";
 import type { Channel } from "./models/channel.svelte";
 import type { CurrentUser } from "./models/current-user.svelte";
-import { settings } from "./settings";
 import type { DispatchPayload, Paint } from "./seventv";
-import { SplitLayout } from "./split-layout";
+import { SplitController } from "./splits/controller.svelte";
 import type { Theme } from "./themes";
 import { TwitchClient } from "./twitch/client";
 import type { NotificationPayload } from "./twitch/eventsub";
@@ -49,7 +48,7 @@ class App {
 	/**
 	 * The current split layout.
 	 */
-	public readonly splits = new SplitLayout();
+	public readonly splits = new SplitController();
 
 	/**
 	 * Route history.
@@ -91,10 +90,6 @@ class App {
 			if (channel.joined) {
 				this.focused = channel;
 			} else {
-				if (settings.state["advanced.singleConnection"]) {
-					await this.focused?.leave();
-				}
-
 				await channel.join();
 			}
 		}
@@ -141,6 +136,13 @@ class App {
 
 		this.connected = true;
 		log.info("All connections established");
+	}
+
+	public refocus(previous: Channel | undefined) {
+		if (this.focused === previous) {
+			const nextId = this.splits.focused?.active;
+			this.focused = nextId ? (this.channels.get(nextId) ?? null) : null;
+		}
 	}
 
 	async #handle(key: string, payload: any) {

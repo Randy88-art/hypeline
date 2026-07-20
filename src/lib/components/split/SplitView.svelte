@@ -1,85 +1,75 @@
 <script lang="ts">
-	import { createDraggable, createDroppable } from "@dnd-kit/svelte";
+	import { createDroppable } from "@dnd-kit/svelte";
 	import { app } from "$lib/app.svelte";
 	import Channel from "$lib/components/Channel.svelte";
 	import * as Empty from "$lib/components/ui/empty";
-	import { isEmptyPaneId, type SplitDropPosition } from "$lib/split-layout";
+	import type { Pane } from "$lib/splits/types";
 	import Layout from "~icons/ph/layout";
-	import SplitHeader from "./SplitHeader.svelte";
+	import TabBar from "./TabBar.svelte";
 
 	interface Props {
-		id: string;
+		pane: Pane;
 	}
 
-	const { id }: Props = $props();
+	const { pane }: Props = $props();
 
-	const channel = $derived(app.channels.get(id));
+	const channel = $derived(pane.active ? app.channels.get(pane.active) : null);
 
-	const draggable = createDraggable({
-		alignment: {
-			x: "center",
-			y: "start",
-		},
+	const droppable = createDroppable({
 		get id() {
-			return `pane:${id}`;
+			return `pane:${pane.id}`;
 		},
 		get type() {
 			return "pane";
 		},
-		get data() {
-			return { kind: "pane", id };
+		get accept() {
+			return ["tab", "channel"];
 		},
-		get disabled() {
-			return isEmptyPaneId(id);
+		get data() {
+			return { kind: "pane", paneId: pane.id };
 		},
 	});
 
-	function makeZone(position: SplitDropPosition, edge: boolean) {
-		return createDroppable({
-			get id() {
-				return `zone:${id}:${position}`;
-			},
-			get type() {
-				return "split-zone";
-			},
-			get data() {
-				return { paneId: id, position };
-			},
-			get disabled() {
-				return edge && !channel;
-			},
-		});
+	function trackElement(node: HTMLElement) {
+		app.splits.registerPaneElement(pane.id, node);
+		return () => app.splits.unregisterPaneElement(pane.id, node);
 	}
 
-	const dropCenter = makeZone("center", false);
-	const dropUp = makeZone("up", true);
-	const dropDown = makeZone("down", true);
-	const dropLeft = makeZone("left", true);
-	const dropRight = makeZone("right", true);
+	const activeZone = $derived(
+		app.splits.dropTarget?.paneId === pane.id ? app.splits.dropTarget.zone : null,
+	);
 
-	const activeClass = $derived.by(() => {
-		if (dropUp.isDropTarget) return "top-0 left-0 w-full h-1/2";
-		if (dropDown.isDropTarget) return "top-1/2 left-0 w-full h-1/2";
-		if (dropLeft.isDropTarget) return "top-0 left-0 w-1/2 h-full";
-		if (dropRight.isDropTarget) return "top-0 left-1/2 w-1/2 h-full";
-		if (dropCenter.isDropTarget) return "top-0 left-0 size-full";
+	const overlayClass = $derived.by(() => {
+		switch (activeZone) {
+			case "left":
+				return "top-0 left-0 w-1/2 h-full";
+			case "right":
+				return "top-0 left-1/2 w-1/2 h-full";
+			case "top":
+				return "top-0 left-0 w-full h-1/2";
+			case "bottom":
+				return "top-1/2 left-0 w-full h-1/2";
+			case "center":
+				return "inset-0 size-full";
+			default:
+				return null;
+		}
 	});
 
 	function setFocus() {
-		app.splits.focused = id;
+		app.splits.focusedPaneId = pane.id;
 	}
 </script>
 
-<div class="relative flex size-full flex-col" onfocusin={setFocus} {@attach draggable.attach}>
-	<SplitHeader {id} attachHandle={draggable.attachHandle} />
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="relative flex size-full flex-col" onfocusin={setFocus} onpointerdowncapture={setFocus}>
+	<TabBar {pane} />
 
-	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="relative h-full" onclick={setFocus}>
-		<div class={["h-full", draggable.isDragging && "opacity-50"]}>
+	<div class="relative h-full min-h-0">
+		<div class="h-full">
 			{#if channel}
 				{#key channel.id}
-					<Channel {channel} split />
+					<Channel {channel} />
 				{/key}
 			{:else}
 				<Empty.Root class="h-full">
@@ -91,7 +81,7 @@
 						<Empty.Title>Empty split</Empty.Title>
 
 						<Empty.Description>
-							Drag a channel here or click to add it as a split.
+							Drag a tab or channel here, or click a channel to open it.
 						</Empty.Description>
 					</Empty.Header>
 				</Empty.Root>
@@ -99,29 +89,18 @@
 		</div>
 
 		<div
-			class={[
-				"pointer-events-none absolute z-20 bg-primary/50 brightness-50 transition-all duration-75 ease-out",
-				activeClass ? "opacity-100" : "opacity-0",
-				activeClass ?? "inset-0",
-			]}
+			class="pointer-events-none absolute inset-0 z-10"
+			{@attach droppable.attach}
+			{@attach trackElement}
+			aria-hidden="true"
 		></div>
 
-		<div class="pointer-events-none absolute inset-0 z-10" {@attach dropCenter.attach}></div>
 		<div
-			class="pointer-events-none absolute inset-x-0 top-0 z-10 h-1/4"
-			{@attach dropUp.attach}
-		></div>
-		<div
-			class="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-1/4"
-			{@attach dropDown.attach}
-		></div>
-		<div
-			class="pointer-events-none absolute inset-y-0 left-0 z-10 w-1/4"
-			{@attach dropLeft.attach}
-		></div>
-		<div
-			class="pointer-events-none absolute inset-y-0 right-0 z-10 w-1/4"
-			{@attach dropRight.attach}
+			class={[
+				"pointer-events-none absolute z-20 bg-primary/50 brightness-50 transition-all duration-75 ease-out",
+				overlayClass ? "opacity-100" : "opacity-0",
+				overlayClass ?? "inset-0",
+			]}
 		></div>
 	</div>
 </div>

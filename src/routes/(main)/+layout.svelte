@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { AutoScroller } from "@dnd-kit/dom";
-	import { move } from "@dnd-kit/helpers";
 	import { DragDropProvider, DragOverlay } from "@dnd-kit/svelte";
 	import { createHotkey } from "@tanstack/svelte-hotkeys";
 	import { ask } from "@tauri-apps/plugin-dialog";
@@ -13,6 +12,7 @@
 	import Sidebar from "$lib/components/Sidebar.svelte";
 	import StreamInfo from "$lib/components/StreamInfo.svelte";
 	import * as Tooltip from "$lib/components/ui/tooltip";
+	import { onDragStart, onDragOver, onDragMove, onDragEnd } from "$lib/splits/events";
 	import { storage } from "$lib/stores";
 
 	const { children } = $props();
@@ -54,22 +54,10 @@
 			threshold: { x: 0, y: 0 },
 		}),
 	]}
-	onDragOver={(event) => {
-		const source = event.operation.source;
-		const target = event.operation.target;
-		if (!source || !target) return;
-
-		if (source.type === "pinned" && target.type === "pinned") {
-			storage.state.pinned = move(storage.state.pinned, event);
-		}
-	}}
-	onDragEnd={(event) => {
-		const target = event.operation.target;
-
-		if (target?.type === "split-zone") {
-			app.splits.handleDragEnd(event);
-		}
-	}}
+	{onDragStart}
+	{onDragOver}
+	{onDragMove}
+	{onDragEnd}
 >
 	<Tooltip.Provider delayDuration={100}>
 		<div class="flex grow overflow-hidden">
@@ -86,10 +74,10 @@
 	<DragOverlay>
 		{#snippet children(source)}
 			{@const channel = app.channels.get(source.data.id)}
-			{@const isPane = source.type === "pane"}
+			{@const isTab = source.type === "tab"}
 
 			{#if channel}
-				{#if isPane}
+				{#if isTab}
 					<div
 						class="mx-auto flex max-w-max items-center gap-2 rounded bg-background px-2 py-1"
 					>

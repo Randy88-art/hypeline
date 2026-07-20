@@ -7,8 +7,8 @@
 	import { buttonVariants } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
 	import { settings } from "$lib/settings";
-	import { firstLeaf, type SplitDirection } from "$lib/split-layout";
-	import { storage } from "$lib/stores";
+	import { createPane, firstLeaf } from "$lib/splits/tree";
+	import type { SplitDirection } from "$lib/splits/types";
 	import ChatDots from "~icons/ph/chat-dots";
 	import Spinner from "~icons/ph/spinner";
 
@@ -19,9 +19,11 @@
 			await app.user.fetchEmoteSets();
 		}
 
-		// Restore the focused channel from the first leaf of the persisted layout.
-		if (storage.state.layout) {
-			const channel = app.channels.get(firstLeaf(storage.state.layout));
+		if (app.splits.root) {
+			const pane = firstLeaf(app.splits.root);
+			app.splits.focusedPaneId = pane.id;
+
+			const channel = pane.active ? app.channels.get(pane.active) : undefined;
 			if (channel) await app.open(channel);
 		}
 
@@ -29,22 +31,45 @@
 	});
 
 	createHotkey("Mod+T", () => {
-		if (settings.state["advanced.singleConnection"] || !app.splits.focused) return;
-
-		app.splits.insertEmpty(app.splits.focused, settings.state["splits.defaultOrientation"]);
+		if (app.splits.focused) {
+			app.splits.split(app.splits.focused.id, "right");
+		} else {
+			app.splits.root = createPane();
+		}
 	});
 
 	createHotkey("Mod+W", async () => {
-		if (app.splits.focused && app.splits.root && app.splits.root !== app.splits.focused) {
-			app.splits.remove(app.splits.focused);
-		} else if (app.focused) {
-			const channel = app.focused;
-			await channel.leave();
+		const pane = app.splits.focused;
 
-			app.splits.remove(channel.id);
-			app.focused = null;
+		if (!pane) {
+			if (app.focused) {
+				await app.focused.leave();
+				app.focused = null;
+			}
+
+			return;
+		}
+
+		if (pane.active) {
+			const tabId = pane.active;
+			app.splits.closeTab(tabId);
+
+			const channel = app.channels.get(tabId);
+
+			if (settings.state["splits.leaveOnClose"]) {
+				await channel?.leave();
+			}
+
+			app.refocus(channel);
+		} else {
+			app.splits.closePane(pane.id);
 		}
 	});
+
+	createHotkeys([
+		{ hotkey: "Mod+Tab", callback: () => navigateTabs(1) },
+		{ hotkey: "Mod+Shift+Tab", callback: () => navigateTabs(-1) },
+	]);
 
 	createHotkeys([
 		{ hotkey: "Mod+ArrowUp", callback: () => navigateSplit("up") },
@@ -53,26 +78,39 @@
 		{ hotkey: "Mod+ArrowRight", callback: () => navigateSplit("right") },
 	]);
 
-	function navigateSplit(direction: SplitDirection) {
-		if (!app.splits.focused) return;
+	async function navigateTabs(offset: number) {
+		const pane = app.splits.focused;
+		if (!pane?.active || pane.tabs.length < 2) return;
 
-		const targetId = app.splits.navigate(app.splits.focused, direction);
-		if (!targetId) return;
+		const index = pane.tabs.indexOf(pane.active);
+		const next = pane.tabs[(index + offset + pane.tabs.length) % pane.tabs.length];
 
-		const channel = app.channels.get(targetId);
+		const channel = app.channels.get(next);
 
 		if (channel) {
-			app.splits.focused = channel.id;
-			channel.chat.input?.focus();
+			await app.open(channel);
 		} else {
-			app.splits.focused = targetId;
+			app.splits.activate(next);
 		}
+	}
+
+	function navigateSplit(direction: SplitDirection) {
+		if (!app.splits.focusedPaneId) return;
+
+		const paneId = app.splits.navigate(app.splits.focusedPaneId, direction);
+		if (!paneId) return;
+
+		app.splits.focusedPaneId = paneId;
+
+		const pane = app.splits.pane(paneId);
+		const channel = pane?.active ? app.channels.get(pane.active) : undefined;
+		channel?.chat.input?.focus();
 	}
 </script>
 
 <div class="h-full">
 	{#if app.splits.root}
-		<SplitNode bind:node={app.splits.root} />
+		<SplitNode node={app.splits.root} />
 	{:else if loading}
 		<div class="flex size-full flex-col items-center justify-center">
 			<Spinner class="size-6 animate-spin" />
