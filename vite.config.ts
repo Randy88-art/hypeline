@@ -55,6 +55,7 @@ export default defineConfig({
 		"*.{ts,svelte,json}": "vp check --fix",
 	},
 	fmt: {
+		endOfLine: process.platform === "win32" ? "crlf" : "lf",
 		tabWidth: 4,
 		useTabs: true,
 		svelte: true,
