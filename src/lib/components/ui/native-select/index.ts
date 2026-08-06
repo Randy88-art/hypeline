@@ -3,10 +3,10 @@ import Option from "./native-select-option.svelte";
 import Root from "./native-select.svelte";
 
 export {
-	Root as NativeSelect,
-	OptGroup as NativeSelectOptGroup,
-	Option as NativeSelectOption,
-	OptGroup,
-	Option,
 	Root,
+	Option,
+	OptGroup,
+	Root as NativeSelect,
+	Option as NativeSelectOption,
+	OptGroup as NativeSelectOptGroup,
 };
