@@ -129,7 +129,7 @@
 					<Tabs.Trigger value={category.label} disabled={searching && count === 0}>
 						{#snippet child({ props })}
 							<Button
-								class="w-full justify-start text-muted-foreground hover:bg-accent/50 data-[state=active]:bg-muted data-[state=active]:text-foreground data-[state=active]:shadow-xs"
+								class="w-full justify-start text-muted-foreground hover:bg-primary/10 data-[state=active]:bg-muted data-[state=active]:text-foreground data-[state=active]:shadow-xs"
 								variant="ghost"
 								{...props}
 							>

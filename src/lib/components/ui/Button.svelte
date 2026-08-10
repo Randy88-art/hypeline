@@ -27,9 +27,9 @@
 		],
 		variants: {
 			size: {
-				default: "h-9 gap-1.5 rounded-lg px-3 text-base",
-				sm: "h-7 gap-1 rounded-md px-2 text-xs",
-				lg: "h-10 gap-2 rounded-lg px-4 text-base",
+				default: "h-9 gap-1.5 rounded-xl px-3 text-sm",
+				sm: "h-7 gap-1 rounded-lg px-2 text-xs",
+				lg: "h-10 gap-2 rounded-xl px-4 text-base",
 				icon: "size-9 items-center justify-center rounded-lg p-0",
 				"icon-sm": "size-6.5 items-center justify-center rounded-md p-0",
 				"icon-lg": "size-10 items-center justify-center rounded-lg p-0",
@@ -47,7 +47,7 @@
 					"bg-muted/40 text-muted-foreground ring ring-border",
 					"not-disabled:hover:text-foreground not-disabled:hover:ring-ring/25",
 				],
-				ghost: "bg-inherit text-foreground shadow-none hover:bg-muted",
+				ghost: "bg-inherit text-foreground shadow-none hover:bg-primary/10",
 				inline: [
 					"h-auto rounded-xs px-0 py-0 align-baseline font-semibold shadow-none",
 					"underline decoration-dotted decoration-from-font underline-offset-[3px]",
