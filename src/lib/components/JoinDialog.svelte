@@ -29,10 +29,12 @@
 	let suggestions = $state<ChannelSuggestion[]>([]);
 	let active = $state(0);
 
+	const isSearch = $derived(!!value.trim());
+
 	const rows = $derived.by(() => {
-		const base: RecentSearch[] = value.trim()
-			? suggestions.map(toRow)
-			: storage.state.recentSearches;
+		if (!isSearch) return storage.state.recentSearches;
+
+		const base = suggestions.map(toRow);
 
 		return filter === "live" ? base.filter((r) => r.isLive) : base;
 	});
@@ -234,7 +236,7 @@
 				<div
 					class="flex items-center gap-2 px-3 pt-1 pb-2 text-xs font-medium text-muted-foreground"
 				>
-					{#if value.trim()}
+					{#if isSearch}
 						<Broadcast class="size-4" />
 						Channels
 					{:else}
@@ -266,14 +268,14 @@
 							<div class="w-full min-w-0 flex-1">
 								<span class="font-semibold">{item.displayName}</span>
 
-								{#if item.streamTitle}
+								{#if isSearch && item.streamTitle}
 									<p class="truncate text-sm" title={item.streamTitle}>
 										{item.streamTitle}
 									</p>
 								{/if}
 							</div>
 
-							{#if item.isLive}
+							{#if isSearch && item.isLive}
 								<span class="flex items-center gap-1.5 text-red-500">
 									<span class="size-2 animate-pulse rounded-full bg-current"
 									></span>
@@ -282,7 +284,7 @@
 							{/if}
 						</button>
 
-						{#if value.trim()}
+						{#if isSearch}
 							<CaretRight class="mr-3 size-4 shrink-0 text-muted-foreground" />
 						{:else}
 							<button
@@ -301,7 +303,7 @@
 					<Spinner class="animate-spin" />
 					Searching&hellip;
 				</p>
-			{:else if value.trim()}
+			{:else if isSearch}
 				<p class="px-3 py-8 text-center text-sm text-muted-foreground">
 					No channels found.
 				</p>
