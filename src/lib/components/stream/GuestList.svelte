@@ -80,7 +80,7 @@
 		</div>
 
 		{#if viewers != null}
-			<div class="flex items-center text-xs text-red-400 tabular-nums dark:text-red-500">
+			<div class="flex items-center text-xs text-red-500 tabular-nums dark:text-red-400">
 				<Users class="mr-1" />
 				{viewers}
 			</div>
