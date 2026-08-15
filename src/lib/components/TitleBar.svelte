@@ -13,7 +13,7 @@
 	import Gear from "~icons/ph/gear";
 	import MagnifyingGlass from "~icons/ph/magnifying-glass";
 	import JoinDialog from "./JoinDialog.svelte";
-	import SettingsDialog, { openSettings } from "./settings/SettingsDialog.svelte";
+	import SettingsDialog from "./settings/SettingsDialog.svelte";
 	import Button from "./ui/Button.svelte";
 	import Link from "./ui/Link.svelte";
 
@@ -120,10 +120,11 @@
 		<div class="pr-3">
 			<Button
 				class="size-min p-1 text-muted-foreground"
+				command="show-modal"
+				commandfor="settings-dialog"
 				size="icon"
 				variant="ghost"
 				aria-label="Open settings"
-				onclick={openSettings}
 			>
 				<Gear />
 			</Button>

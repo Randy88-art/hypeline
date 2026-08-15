@@ -7,11 +7,11 @@
 	import { check } from "@tauri-apps/plugin-updater";
 	import { onMount } from "svelte";
 	import { app } from "$lib/app.svelte";
-	import { openSettings } from "$lib/components/settings/SettingsDialog.svelte";
 	import Sidebar from "$lib/components/Sidebar.svelte";
 	import StreamInfo from "$lib/components/stream/StreamInfo.svelte";
 	import { onDragStart, onDragOver, onDragMove, onDragEnd } from "$lib/splits/events";
 	import { storage } from "$lib/stores";
+	import { openDialog } from "$lib/util";
 
 	const { children } = $props();
 
@@ -40,7 +40,7 @@
 		}
 	});
 
-	createHotkey("Mod+,", () => openSettings());
+	createHotkey("Mod+,", () => openDialog("settings-dialog"));
 </script>
 
 <DragDropProvider

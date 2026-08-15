@@ -1,15 +1,3 @@
-<script module lang="ts">
-	export const settingsDialogId = "settings-dialog";
-
-	export function openSettings() {
-		document.querySelector<HTMLDialogElement>(`#${settingsDialogId}`)?.showModal();
-	}
-
-	export function closeSettings() {
-		document.querySelector<HTMLDialogElement>(`#${settingsDialogId}`)?.close();
-	}
-</script>
-
 <script lang="ts">
 	import { Tabs } from "bits-ui";
 	import Button from "$lib/components/ui/Button.svelte";
@@ -74,7 +62,7 @@
 </script>
 
 <Dialog
-	id={settingsDialogId}
+	id="settings-dialog"
 	class="m-0 h-screen max-h-none max-w-none! overflow-hidden rounded-none p-0 *:data-[slot=dialog-content]:h-full *:data-[slot=dialog-content]:space-y-0"
 	aria-label="Settings"
 	{onkeydown}
@@ -173,9 +161,10 @@
 				</div>
 
 				<Button
+					command="close"
+					commandfor="settings-dialog"
 					size="icon-sm"
 					variant="ghost"
-					onclick={closeSettings}
 					aria-label="Close settings"
 				>
 					<X />
