@@ -45,6 +45,8 @@ export class Chat {
 	#bypassNext = false;
 	#lastRecentAt: number | null = null;
 
+	#ids = new Set<string>();
+
 	// Timestamps of last messages sent by normal/elevated users.
 	#lastMessage: number[] = [];
 	#lastMessageElevated: number[] = [];
@@ -103,9 +105,11 @@ export class Chat {
 	}
 
 	public add(message: Message) {
-		if (this.messages.some((m) => m.id === message.id)) {
+		if (this.#ids.has(message.id)) {
 			return this;
 		}
+
+		this.#ids.add(message.id);
 
 		if (message instanceof TextualMessage && message.recent) {
 			if (this.#lastRecentAt === null) {
@@ -182,6 +186,8 @@ export class Chat {
 		this.replyTarget = null;
 		this.messages = [];
 		this.history = [];
+
+		this.#ids.clear();
 
 		this.clearPin();
 
