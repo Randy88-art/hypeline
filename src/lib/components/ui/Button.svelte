@@ -21,7 +21,7 @@
 			"focus:ring-ring/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
 			"aria-invalid:ring-2 aria-invalid:ring-destructive",
 
-			"disabled:cursor-not-allowed disabled:text-muted-foreground disabled:opacity-50",
+			"disabled:cursor-not-allowed disabled:opacity-50",
 			"aria-disabled:pointer-events-none aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
 			"[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
 		],
