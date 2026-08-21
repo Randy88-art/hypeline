@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { invoke } from "@tauri-apps/api/core";
 	import { appLogDir } from "@tauri-apps/api/path";
-	import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 	import { openPath } from "@tauri-apps/plugin-opener";
 	import { scale } from "svelte/transition";
 	import Button from "$lib/components/ui/Button.svelte";
@@ -20,9 +19,7 @@
 	async function copyDebugInfo() {
 		const info = await invoke<string>("get_debug_info");
 
-		// Need to use clipboard plugin because of timing sensitivity with the
-		// Clipboard API
-		await writeText(info);
+		await navigator.clipboard.writeText(info);
 		copied = true;
 
 		setTimeout(() => {

@@ -100,7 +100,6 @@ pub fn run() {
             compression_method: Some(CompressionMethod::Lzma2),
             ..Default::default()
         }))
-        .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
