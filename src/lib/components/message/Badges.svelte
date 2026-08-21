@@ -9,11 +9,15 @@
 	const { badges }: Props = $props();
 </script>
 
-{#each badges as badge (badge.id)}
+{#each badges as badge, i (badge.id)}
 	<Tooltip class="p-1">
 		{#snippet trigger(register)}
 			<img
-				class={["inline-block align-middle", badge.color && "rounded-xs"]}
+				class={[
+					"inline-block align-middle",
+					badge.color && "rounded-xs",
+					i < badges.length - 1 && "me-0.5",
+				]}
 				src={badge.imageUrl}
 				alt={badge.description}
 				width="18"
