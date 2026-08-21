@@ -37,7 +37,7 @@
 >
 	{#if header}
 		<header
-			class="flex flex-col gap-2 heading:text-lg/1 heading:font-semibold [p]:text-sm [p]:text-muted-foreground"
+			class="flex flex-col gap-2 *:heading:text-xl *:heading:font-semibold *:[p]:text-sm *:[p]:text-muted-foreground"
 			data-slot="dialog-header"
 		>
 			{@render header()}
